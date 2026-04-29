@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cultural Curiosity – Sentence Exercise</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f7f5;
+    --paper: #fdfffe;
+    --ink: #2a2520;
+    --ink-light: #6b6560;
+    --accent: #2e7d5e;
+    --accent-soft: #d4eee3;
+    --accent2: #2980b9;
+    --accent2-soft: #d3e6f5;
+    --gold: #b8860b;
+    --selected: #e8b84b;
+    --selected-bg: #fef9ec;
+    --correct: #27ae60;
+    --correct-bg: #eafaf1;
+    --wrong: #e74c3c;
+    --wrong-bg: #fdecea;
+    --shadow: rgba(42,37,32,0.08);
+    --border: #cdd8d2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; padding: 2rem 1rem 4rem; }
+  .page-wrap { max-width: 860px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+  header::after { content: ''; display: block; width: 60px; height: 3px; background: var(--accent); margin: 1rem auto 0; border-radius: 2px; }
+  .tag { display: inline-block; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 0.25rem 0.75rem; border-radius: 20px; margin-bottom: 0.8rem; }
+  h1 { font-family: 'Lora', serif; font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 600; color: var(--ink); line-height: 1.2; margin-bottom: 0.4rem; }
+  .subtitle { font-size: 0.9rem; color: var(--ink-light); font-weight: 300; }
+
+  .instructions { background: var(--paper); border: 1px solid var(--border); border-left: 4px solid var(--accent2); border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 2rem; font-size: 0.88rem; line-height: 1.7; color: var(--ink-light); }
+  .instructions strong { color: var(--ink); }
+  .instructions ol { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .instructions li { margin-bottom: 0.3rem; }
+
+  .progress-wrap { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--gold)); border-radius: 10px; transition: width 0.4s ease; width: 0%; }
+  .progress-label { font-size: 0.8rem; color: var(--ink-light); white-space: nowrap; font-weight: 500; }
+
+  .text-card { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 2rem 2.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px var(--shadow); line-height: 2; }
+  .para-break { display: block; height: 1.2em; }
+
+  .sent { font-family: 'Lora', serif; font-size: 1.05rem; line-height: 1.95; cursor: pointer; border-radius: 4px; padding: 1px 2px; transition: background 0.15s, box-shadow 0.15s; }
+  .sent:hover { background: rgba(46,125,94,0.08); box-shadow: 0 2px 8px rgba(46,125,94,0.12); }
+  .sent.selected { background: var(--selected-bg); box-shadow: 0 0 0 2px var(--selected); color: #7a5c00; }
+  .sent.correct-pick { background: var(--correct-bg); box-shadow: 0 0 0 2px var(--correct); color: #1a6b3c; }
+  .sent.wrong-pick { background: var(--wrong-bg); box-shadow: 0 0 0 2px var(--wrong); color: #7a1a1a; animation: shake 0.3s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)} }
+
+  .action-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  button { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; transition: all 0.18s; letter-spacing: 0.02em; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #236b4e; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(46,125,94,0.3); }
+  .btn-secondary { background: transparent; color: var(--ink-light); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg); color: var(--ink); }
+  .btn-blue { background: var(--accent2); color: white; }
+  .btn-blue:hover { background: #1a6fa8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(41,128,185,0.3); }
+
+  .feedback { border-radius: 8px; padding: 1rem 1.4rem; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; display: none; }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.success { background: var(--correct-bg); border-left: 4px solid var(--correct); color: #1a5c35; }
+  .feedback.error { background: var(--wrong-bg); border-left: 4px solid var(--wrong); color: #7a1a1a; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+  #phase2, #phase3 { display: none; animation: fadeIn 0.5s ease; }
+  .phase-header { text-align: center; margin: 2rem 0 1.5rem; padding-top: 2rem; border-top: 2px dashed var(--border); }
+  .phase-header h2 { font-family: 'Lora', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 0.4rem; }
+  .phase-header p { font-size: 0.88rem; color: var(--ink-light); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+  .fix-item { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 1.4rem 1.8rem; margin-bottom: 1.4rem; box-shadow: 0 1px 6px var(--shadow); transition: box-shadow 0.2s; }
+  .fix-item:hover { box-shadow: 0 3px 14px var(--shadow); }
+  .fix-item.answered { border-color: var(--correct); background: var(--correct-bg); }
+
+  .context-block { font-family: 'Lora', serif; font-size: 0.96rem; line-height: 1.85; margin-bottom: 1rem; padding: 0.9rem 1.1rem; background: var(--bg); border-radius: 6px; border-left: 3px solid var(--border); }
+  .ctx-fragment { color: var(--accent); font-weight: 600; background: var(--accent-soft); border-radius: 3px; padding: 0 3px; }
+  .ctx-neighbor { color: var(--ink-light); }
+
+  .fix-prompt { font-size: 0.82rem; font-weight: 500; color: var(--ink-light); margin-bottom: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; }
+  .options-col { display: flex; flex-direction: column; gap: 0.6rem; }
+  .opt-btn { font-family: 'Lora', serif; font-size: 0.93rem; font-weight: 400; padding: 0.75rem 1.1rem; border-radius: 7px; cursor: pointer; border: 1.5px solid var(--border); background: var(--bg); color: var(--ink); transition: all 0.18s; text-align: left; line-height: 1.5; display: flex; align-items: flex-start; gap: 0.7rem; }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent2); background: var(--accent2-soft); }
+  .strategy-tag { display: inline-block; font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent2); background: var(--accent2-soft); border-radius: 20px; padding: 0.15rem 0.55rem; white-space: nowrap; margin-top: 0.2rem; flex-shrink: 0; }
+  .opt-btn.chosen { border-color: var(--correct); background: var(--correct-bg); color: #155724; cursor: default; }
+  .opt-btn.chosen .strategy-tag { background: #c3e6cb; color: #155724; }
+  .opt-btn.unchosen { opacity: 0.4; cursor: default; }
+  .opt-btn:disabled { cursor: default; }
+
+  .fix-feedback { margin-top: 0.9rem; font-size: 0.88rem; padding: 0.6rem 1rem; border-radius: 6px; display: none; line-height: 1.6; border-left: 3px solid var(--correct); background: var(--correct-bg); color: #1a5c35; }
+  .fix-feedback.show { display: block; animation: fadeIn 0.25s ease; }
+
+  .p2-progress { text-align: center; font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.2rem; font-weight: 500; }
+  .p2-done-banner { background: var(--correct-bg); border: 1px solid var(--correct); border-radius: 10px; padding: 1.2rem 1.8rem; text-align: center; font-size: 0.95rem; color: #1a5c35; display: none; animation: fadeIn 0.4s ease; margin-bottom: 1rem; }
+  .p2-done-banner strong { font-size: 1.1rem; display: block; margin-bottom: 0.3rem; }
+  .p2-btn-row { text-align: center; display: none; }
+
+  .p3-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .p3-columns { grid-template-columns: 1fr; } }
+  .p3-col-label { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .p3-text { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 1.6rem 1.8rem; box-shadow: 0 2px 12px var(--shadow); line-height: 2; }
+  .p3-sent { font-family: 'Lora', serif; font-size: 1rem; line-height: 1.95; }
+  .p3-original-incomplete { font-family: 'Lora', serif; font-size: 1rem; line-height: 1.95; background: var(--selected-bg); border-bottom: 1px solid var(--selected); border-radius: 3px; padding: 0 3px; color: #7a5c00; }
+  .p3-revised { font-family: 'Lora', serif; font-size: 1rem; line-height: 1.95; background: #e8f5e9; border-bottom: 1px solid #a5d6a7; border-radius: 3px; padding: 0 3px; color: #1a5c35; cursor: pointer; position: relative; transition: background 0.15s; }
+  .p3-revised:hover { background: #c8e6c9; }
+
+  .p3-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #2a2520; color: #f7f5f0; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; line-height: 1.5; padding: 0.6rem 0.9rem; border-radius: 7px; width: max-content; max-width: 320px; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.25); white-space: normal; text-align: left; pointer-events: none; }
+  .p3-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #2a2520; }
+  .p3-tooltip .tt-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #a5d6a7; margin-bottom: 0.25rem; }
+  .p3-tooltip .tt-switch { margin-top: 0.4rem; font-size: 0.75rem; color: #b0c4de; }
+  .p3-revised:hover .p3-tooltip { display: block; }
+
+  .deco { display: flex; gap: 5px; justify-content: center; margin: 1rem 0; }
+  .deco span { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+  .deco span:nth-child(2) { background: var(--gold); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="tag">English Grammar – VGS</div>
+    <h1>The Value of Cultural Curiosity</h1>
+    <p class="subtitle">An exercise in identifying and correcting incomplete sentences</p>
+  </header>
+
+  <div id="phase1">
+    <div class="instructions">
+      <strong>Part 1 – Find the incomplete sentences</strong>
+      <ol>
+        <li>Read the text carefully. The text contains incomplete sentences – they are fragments or dependent clauses that cannot stand alone.</li>
+        <li>Hover over a sentence to highlight it. <strong>Click</strong> any sentence you believe is incomplete.</li>
+        <li>Click a selected sentence again to deselect it.</li>
+        <li>When you are ready, press <strong>Check answers</strong>. You will see which selections are wrong, but the key is not revealed.</li>
+        <li>Correct any mistakes and check again – repeat until all incomplete sentences are found.</li>
+      </ol>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 selected</div>
+    </div>
+    <div class="text-card" id="textContainer"></div>
+    <div class="action-row">
+      <button class="btn-primary" onclick="checkPhase1()">Check answers</button>
+      <button class="btn-secondary" onclick="resetPhase1()">Reset selections</button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </div>
+
+  <div id="phase2">
+    <div class="phase-header">
+      <div class="deco"><span></span><span></span><span></span></div>
+      <h2>Part 2 – Fix the incomplete sentences</h2>
+      <p>Each incomplete sentence is shown in context. Both options are correct ways to fix it. Choose the one you find most natural – there is no wrong answer here.</p>
+    </div>
+    <div id="fixContainer"></div>
+    <div class="p2-done-banner" id="p2done">
+      <strong>All done!</strong> You have worked through all the incomplete sentences. Well done – every strategy you have practised is a valuable tool for any writer.
+    </div>
+    <div class="p2-btn-row" id="p2btnRow">
+      <button class="btn-blue" onclick="showPhase3()">See the revised text →</button>
+    </div>
+  </div>
+
+  <div id="phase3">
+    <div class="phase-header">
+      <div class="deco"><span></span><span></span><span></span></div>
+      <h2>Part 3 – Compare the texts</h2>
+      <p>The original text is on the left with incomplete sentences highlighted in yellow. Your revised text is on the right with your fixes highlighted in green. Hover over any green sentence to see the alternative. Click to switch between versions.</p>
+    </div>
+    <div class="p3-columns">
+      <div>
+        <div class="p3-col-label">Original text</div>
+        <div class="p3-text" id="p3Original"></div>
+      </div>
+      <div>
+        <div class="p3-col-label">Your revised text</div>
+        <div class="p3-text" id="p3Revised"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const sentences = [
+  // INTRODUCTION
+  { id: 1, text: "Travelling abroad gives people the chance to see the world from a new perspective.", incomplete: false },
+  {
+    id: 2, text: "And to discover that there are many different but equally valid ways of living.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "Travelling abroad gives people the chance to see the world from a new perspective and to discover that there are many different but equally valid ways of living.", comment: "Well done. Joining this phrase to the previous sentence completes the list of things travel gives people the chance to do." },
+        { strategy: "Complete the sentence", text: "It also allows people to discover that there are many different but equally valid ways of living.", comment: "Well done. Adding 'It also allows people' gives the sentence its own subject and verb, and 'also' creates a natural link to the previous sentence." }
+      ]
+    }
+  },
+  { id: 3, text: "However, this does not happen automatically.", incomplete: false },
+  { id: 4, text: "Many travellers spend their time in places that are designed for visitors, eating familiar food and following well-known tourist routes.", incomplete: false },
+  {
+    id: 5, text: "Without ever stepping outside the comfortable bubble of tourism.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "Many travellers spend their time in places that are designed for visitors, eating familiar food and following well-known tourist routes, without ever stepping outside the comfortable bubble of tourism.", comment: "Well done. Attaching this phrase to the previous sentence makes it a natural extension of the same thought." },
+        { strategy: "Complete the sentence", text: "They never step outside the comfortable bubble of tourism.", comment: "Well done. Replacing 'Without ever stepping' with 'They never step' gives the sentence its own subject and verb." }
+      ]
+    }
+  },
+  { id: 6, text: "Approaching travel with genuine curiosity about local culture leads to a richer and more meaningful experience.", incomplete: false },
+
+  // BODY PARAGRAPH 1
+  { id: 7, text: "One of the most important benefits of cultural curiosity is that it builds real understanding.", incomplete: false, paragraphBreak: true },
+  { id: 8, text: "Learning a few words of the local language, trying unfamiliar food, or asking questions about local traditions are all small steps that can make a significant difference.", incomplete: false },
+  {
+    id: 9, text: "Steps that signal genuine interest and openness rather than indifference.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "Learning a few words of the local language, trying unfamiliar food, or asking questions about local traditions are all small steps that can make a significant difference, steps that signal genuine interest and openness rather than indifference.", comment: "Well done. Attaching this phrase to the previous sentence as a further description of what kind of steps these are is natural and clear." },
+        { strategy: "Complete the sentence", text: "These are steps that signal genuine interest and openness rather than indifference.", comment: "Well done. Adding 'These are' at the start gives the noun phrase a subject and verb, making it a complete sentence." }
+      ]
+    }
+  },
+  { id: 10, text: "Local people tend to respond warmly to travellers who make this kind of effort.", incomplete: false },
+  {
+    id: 11, text: "Sharing knowledge, stories, and invitations that no guidebook could ever provide.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "Local people tend to respond warmly to travellers who make this kind of effort, sharing knowledge, stories, and invitations that no guidebook could ever provide.", comment: "Well done. Attaching this participial phrase to the previous sentence as an extension of how local people respond is natural and fluent." },
+        { strategy: "Complete the sentence", text: "In doing so, they share knowledge, stories, and invitations that no guidebook could ever provide.", comment: "Well done. Adding 'In doing so, they' gives the sentence its own subject and verb, and 'In doing so' creates a clear link to the previous sentence." }
+      ]
+    }
+  },
+  { id: 12, text: "Cultural curiosity also leads naturally to greater respect for others.", incomplete: false },
+  { id: 13, text: "It is difficult to look down on customs and traditions that one has made a genuine effort to understand.", incomplete: false },
+  {
+    id: 14, text: "Which is why curiosity and respect tend to go hand in hand.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "It is difficult to look down on customs and traditions that one has made a genuine effort to understand, which is why curiosity and respect tend to go hand in hand.", comment: "Well done. Attaching the relative clause to the previous sentence is exactly how 'which' is meant to be used." },
+        { strategy: "Complete the sentence", text: "This is why curiosity and respect tend to go hand in hand.", comment: "Well done. Replacing 'Which' with 'This' gives the sentence its own subject and makes it fully independent." }
+      ]
+    }
+  },
+  { id: 15, text: "This combination forms the basis for genuine and lasting cross-cultural connections.", incomplete: false },
+
+  // BODY PARAGRAPH 2
+  { id: 17, text: "Engaging with local culture benefits both the traveller and the communities being visited.", incomplete: false, paragraphBreak: true },
+  {
+    id: 18, text: "Travellers who actively seek out new cultural experiences.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Complete the sentence", text: "Many travellers actively seek out new cultural experiences.", comment: "Well done. Replacing the relative clause with a simple predicate gives the sentence its own subject and verb." },
+        { strategy: "Join with next sentence", text: "Travellers who actively seek out new cultural experiences tend to return home with a broader and more flexible way of looking at the world.", comment: "Well done. Joining this clause to the next sentence restores the full sentence and its meaning." }
+      ]
+    }
+  },
+  { id: 181, text: "They tend to return home with a broader and more flexible way of looking at the world.", incomplete: false },
+  { id: 19, text: "This often challenges assumptions and habits they may not have known they had.", incomplete: false },
+  {
+    id: 20, text: "Because seeing how others live makes it easier to question what had previously seemed obvious or natural.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "This often challenges assumptions and habits they may not have known they had, because seeing how others live makes it easier to question what had previously seemed obvious or natural.", comment: "Well done. Joining this clause to the previous sentence with a comma explains the reason behind the argument." },
+        { strategy: "Complete the sentence", text: "After all, seeing how others live makes it easier to question what had previously seemed obvious or natural.", comment: "Well done. Removing 'Because' and adding 'After all' gives the sentence its own subject and verb, and links it naturally to the previous sentence." }
+      ]
+    }
+  },
+  { id: 21, text: "Observing how different societies approach family life, work, or community can also prompt deeper reflection on one's own values.", incomplete: false },
+  { id: 22, text: "In this way, cultural curiosity is not just about learning facts about other places.", incomplete: false },
+  {
+    id: 23, text: "But about developing a more open and self-aware way of thinking.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "In this way, cultural curiosity is not just about learning facts about other places, but about developing a more open and self-aware way of thinking.", comment: "Well done. Joining this clause to the previous sentence completes the 'not just... but' structure it belongs to." },
+        { strategy: "Complete the sentence", text: "It is also about developing a more open and self-aware way of thinking.", comment: "Well done. Replacing 'But' with 'It is also' gives the sentence its own subject and verb, and 'also' links it naturally to the previous sentence." }
+      ]
+    }
+  },
+  { id: 24, text: "These are qualities that serve travellers well long after they return home.", incomplete: false },
+
+  // CONCLUSION
+  { id: 25, text: "Cultural curiosity is therefore one of the most valuable attitudes a traveller can bring on a journey.", incomplete: false, paragraphBreak: true },
+  { id: 26, text: "Those who travel with an open mind and a willingness to engage tend to gain far more than those who do not.", incomplete: false },
+  {
+    id: 27, text: "Not just memorable experiences, but a deeper and more nuanced understanding of both the world and themselves.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "Those who travel with an open mind and a willingness to engage tend to gain far more than those who do not, not just memorable experiences, but a deeper and more nuanced understanding of both the world and themselves.", comment: "Well done. Attaching this phrase to the previous sentence as a clarification of what 'far more' means is natural and gives the conclusion a satisfying finish." },
+        { strategy: "Complete the sentence", text: "They gain not just memorable experiences, but a deeper and more nuanced understanding of both the world and themselves.", comment: "Well done. Adding 'They gain' at the start gives the phrase its own subject and verb, making it a complete and meaningful sentence." }
+      ]
+    }
+  },
+  { id: 28, text: "Curiosity transforms travel from a passive experience into an active one.", incomplete: false },
+  {
+    id: 29, text: "Making every encounter, every meal, and every conversation a chance to learn something new.",
+    incomplete: true,
+    fix: {
+      prompt: "Both options make this a complete sentence. Which do you prefer?",
+      options: [
+        { strategy: "Join with previous sentence", text: "Curiosity transforms travel from a passive experience into an active one, making every encounter, every meal, and every conversation a chance to learn something new.", comment: "Well done. Attaching this participial phrase to the previous sentence as an extension of what curiosity does is natural and creates a strong closing rhythm." },
+        { strategy: "Complete the sentence", text: "In this way, every encounter, every meal, and every conversation becomes a chance to learn something new.", comment: "Well done. Adding 'In this way' and restructuring slightly gives the sentence its own subject and verb, and 'In this way' links it clearly to the previous sentence." }
+      ]
+    }
+  }
+];
+
+const pairs = {};
+
+// ============================================================
+// PHASE 1
+// ============================================================
+const correctIds = new Set(sentences.filter(s => s.incomplete).map(s => s.id));
+const TOTAL = correctIds.size;
+let selected = new Set();
+let phase1Done = false;
+
+function buildText() {
+  const container = document.getElementById('textContainer');
+  container.innerHTML = '';
+  sentences.forEach(s => {
+    if (s.paragraphBreak) {
+      container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+    }
+    const span = document.createElement('span');
+    span.className = 'sent';
+    span.dataset.id = s.id;
+    span.textContent = s.text + ' ';
+    span.addEventListener('click', () => toggleSentence(s.id));
+    container.appendChild(span);
+  });
+}
+
+function toggleSentence(id) {
+  if (phase1Done) return;
+  const span = document.querySelector(`.sent[data-id="${id}"]`);
+  if (selected.has(id)) {
+    selected.delete(id);
+    span.classList.remove('selected');
+  } else {
+    selected.add(id);
+    span.classList.add('selected');
+  }
+  updateProgress();
+  clearFeedback('fb1');
+  clearSentenceStates();
+}
+
+function clearSentenceStates() {
+  document.querySelectorAll('.sent').forEach(s => s.classList.remove('correct-pick', 'wrong-pick'));
+}
+
+function updateProgress() {
+  const n = selected.size;
+  document.getElementById('progressFill').style.width = Math.min(n / TOTAL * 100, 100) + '%';
+  document.getElementById('progressLabel').textContent = `${n} / ${TOTAL} selected`;
+}
+
+function checkPhase1() {
+  clearSentenceStates();
+  let wrongCount = 0;
+  selected.forEach(id => {
+    const span = document.querySelector(`.sent[data-id="${id}"]`);
+    if (correctIds.has(id)) { span.classList.add('correct-pick'); }
+    else { span.classList.add('wrong-pick'); wrongCount++; }
+  });
+  const missed = [...correctIds].filter(id => !selected.has(id)).length;
+  const fb = document.getElementById('fb1');
+  if (wrongCount === 0 && missed === 0) {
+    fb.className = 'feedback success show';
+    fb.innerHTML = `<strong>Excellent!</strong> You found all ${TOTAL} incomplete sentences. Scroll down to begin Part 2.`;
+    phase1Done = true;
+    setTimeout(showPhase2, 1200);
+  } else {
+    let msg = '';
+    if (wrongCount > 0) msg += `<strong>${wrongCount} incorrect selection${wrongCount > 1 ? 's' : ''}</strong> – ${wrongCount > 1 ? 'these are' : 'this is a'} complete sentence${wrongCount > 1 ? 's' : ''}. `;
+    if (missed > 0) msg += `<strong>${missed} incomplete sentence${missed > 1 ? 's' : ''} not yet found.</strong> `;
+    msg += 'Correct your selections and try again.';
+    fb.className = 'feedback error show';
+    fb.innerHTML = msg;
+  }
+}
+
+function resetPhase1() {
+  selected.clear();
+  clearSentenceStates();
+  document.querySelectorAll('.sent').forEach(s => s.classList.remove('selected'));
+  updateProgress();
+  clearFeedback('fb1');
+}
+
+function clearFeedback(id) {
+  const el = document.getElementById(id);
+  el.className = 'feedback';
+  el.innerHTML = '';
+}
+
+// ============================================================
+// PHASE 2
+// ============================================================
+const p2choices = {};
+let p2answered = 0;
+
+const handledPairs = new Set();
+const fixUnits = [];
+sentences.filter(s => s.incomplete).forEach(s => {
+  if (s.pairId) {
+    if (!handledPairs.has(s.pairId)) { handledPairs.add(s.pairId); fixUnits.push({ type: 'pair', pairId: s.pairId }); }
+  } else {
+    fixUnits.push({ type: 'single', id: s.id });
+  }
+});
+const p2total = fixUnits.length;
+
+function getNeighborText(id, offset) {
+  const idx = sentences.findIndex(s => s.id === id);
+  const neighbor = sentences[idx + offset];
+  return neighbor ? neighbor.text : null;
+}
+
+function showPhase2() {
+  document.getElementById('phase2').style.display = 'block';
+  document.getElementById('phase2').scrollIntoView({ behavior: 'smooth' });
+  buildFixItems();
+}
+
+function buildFixItems() {
+  const container = document.getElementById('fixContainer');
+  container.innerHTML = '';
+  const prog = document.createElement('div');
+  prog.className = 'p2-progress';
+  prog.id = 'p2progress';
+  prog.textContent = `0 / ${p2total} completed`;
+  container.appendChild(prog);
+
+  const renderedPairs = new Set();
+  sentences.filter(s => s.incomplete).forEach(s => {
+    if (s.pairId) {
+      if (renderedPairs.has(s.pairId)) return;
+      renderedPairs.add(s.pairId);
+      buildPairItem(s.pairId, container);
+    } else {
+      buildSingleItem(s, container);
+    }
+  });
+}
+
+function buildSingleItem(s, container) {
+  const prev = getNeighborText(s.id, -1);
+  const next = getNeighborText(s.id, +1);
+  const div = document.createElement('div');
+  div.className = 'fix-item';
+  div.id = `fix-${s.id}`;
+  let ctxHtml = '';
+  if (prev) ctxHtml += `<span class="ctx-neighbor">${prev} </span>`;
+  ctxHtml += `<span class="ctx-fragment">${s.text}</span>`;
+  if (next) ctxHtml += ` <span class="ctx-neighbor">${next}</span>`;
+  div.innerHTML = `
+    <div class="context-block">${ctxHtml}</div>
+    <div class="fix-prompt">${s.fix.prompt}</div>
+    <div class="options-col" id="opts-${s.id}"></div>
+    <div class="fix-feedback" id="fixfb-${s.id}"></div>
+  `;
+  container.appendChild(div);
+  const optsCol = div.querySelector(`#opts-${s.id}`);
+  s.fix.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="strategy-tag">${opt.strategy}</span><span>${opt.text}</span>`;
+    btn.addEventListener('click', () => chooseSingle(s.id, idx));
+    optsCol.appendChild(btn);
+  });
+}
+
+function buildPairItem(pairId, container) {
+  const pair = pairs[pairId];
+  const firstIdx = sentences.findIndex(s => s.id === pair.ids[0]);
+  const lastIdx  = sentences.findIndex(s => s.id === pair.ids[pair.ids.length - 1]);
+  const prevSent = firstIdx > 0 ? sentences[firstIdx - 1].text : null;
+  const nextSent = lastIdx < sentences.length - 1 ? sentences[lastIdx + 1].text : null;
+  const fragmentTexts = pair.ids.map(id => sentences.find(s => s.id === id).text);
+  const div = document.createElement('div');
+  div.className = 'fix-item';
+  div.id = `fix-pair-${pairId}`;
+  let ctxHtml = '';
+  if (prevSent) ctxHtml += `<span class="ctx-neighbor">${prevSent} </span>`;
+  fragmentTexts.forEach(t => { ctxHtml += `<span class="ctx-fragment">${t}</span> `; });
+  if (nextSent) ctxHtml += `<span class="ctx-neighbor">${nextSent}</span>`;
+  div.innerHTML = `
+    <div class="context-block">${ctxHtml}</div>
+    <div class="fix-prompt">${pair.prompt}</div>
+    <div class="options-col" id="opts-pair-${pairId}"></div>
+    <div class="fix-feedback" id="fixfb-pair-${pairId}"></div>
+  `;
+  container.appendChild(div);
+  const optsCol = div.querySelector(`#opts-pair-${pairId}`);
+  pair.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="strategy-tag">${opt.strategy}</span><span>${opt.text}</span>`;
+    btn.addEventListener('click', () => choosePair(pairId, idx));
+    optsCol.appendChild(btn);
+  });
+}
+
+function chooseSingle(sentId, idx) {
+  const item = document.getElementById(`fix-${sentId}`);
+  if (item.classList.contains('answered')) return;
+  const s = sentences.find(s => s.id === sentId);
+  const btns = item.querySelectorAll('.opt-btn');
+  const fb = document.getElementById(`fixfb-${sentId}`);
+  btns.forEach((b, i) => { b.disabled = true; b.classList.add(i === idx ? 'chosen' : 'unchosen'); });
+  fb.textContent = s.fix.options[idx].comment;
+  fb.classList.add('show');
+  item.classList.add('answered');
+  p2choices[sentId] = idx;
+  onUnitAnswered();
+}
+
+function choosePair(pairId, idx) {
+  const item = document.getElementById(`fix-pair-${pairId}`);
+  if (item.classList.contains('answered')) return;
+  const pair = pairs[pairId];
+  const btns = item.querySelectorAll('.opt-btn');
+  const fb = document.getElementById(`fixfb-pair-${pairId}`);
+  btns.forEach((b, i) => { b.disabled = true; b.classList.add(i === idx ? 'chosen' : 'unchosen'); });
+  fb.textContent = pair.options[idx].comment;
+  fb.classList.add('show');
+  item.classList.add('answered');
+  p2choices[pairId] = idx;
+  onUnitAnswered();
+}
+
+function onUnitAnswered() {
+  p2answered++;
+  document.getElementById('p2progress').textContent = `${p2answered} / ${p2total} completed`;
+  if (p2answered === p2total) {
+    setTimeout(() => {
+      document.getElementById('p2done').style.display = 'block';
+      document.getElementById('p2btnRow').style.display = 'block';
+      document.getElementById('p2done').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 400);
+  }
+}
+
+// ============================================================
+// PHASE 3
+// ============================================================
+const p3choices = {};
+
+function showPhase3() {
+  Object.assign(p3choices, p2choices);
+  document.getElementById('phase3').style.display = 'block';
+  document.getElementById('phase3').scrollIntoView({ behavior: 'smooth' });
+  buildPhase3();
+}
+
+function buildPhase3() {
+  buildOriginal();
+  buildRevised();
+}
+
+function buildOriginal() {
+  const container = document.getElementById('p3Original');
+  container.innerHTML = '';
+  sentences.forEach(s => {
+    if (s.paragraphBreak) container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+    const span = document.createElement('span');
+    span.className = s.incomplete ? 'p3-original-incomplete' : 'p3-sent';
+    span.textContent = s.text + ' ';
+    container.appendChild(span);
+  });
+}
+
+function buildRevised() {
+  const container = document.getElementById('p3Revised');
+  container.innerHTML = '';
+
+  const absorbed = new Set();
+  sentences.filter(s => s.incomplete && !s.pairId).forEach(s => {
+    const chosenIdx = p3choices[s.id] ?? 0;
+    const strategy = s.fix.options[chosenIdx].strategy.toLowerCase();
+    const sIdx = sentences.findIndex(x => x.id === s.id);
+    if (strategy.includes('previous') && sIdx > 0) absorbed.add(sentences[sIdx - 1].id);
+    else if (strategy.includes('next') && sIdx < sentences.length - 1) absorbed.add(sentences[sIdx + 1].id);
+  });
+
+  Object.keys(pairs).forEach(pairId => {
+    const pair = pairs[pairId];
+    const chosenIdx = p3choices[pairId] ?? 0;
+    const strategy = pair.options[chosenIdx].strategy.toLowerCase();
+    const firstIdx = sentences.findIndex(s => s.id === pair.ids[0]);
+    const lastIdx  = sentences.findIndex(s => s.id === pair.ids[pair.ids.length - 1]);
+    if (strategy.includes('previous') && firstIdx > 0) absorbed.add(sentences[firstIdx - 1].id);
+    pair.ids.slice(1).forEach(id => absorbed.add(id));
+  });
+
+  const renderedPairs = new Set();
+
+  sentences.forEach(s => {
+    if (absorbed.has(s.id)) return;
+
+    if (s.paragraphBreak) container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+
+    if (s.pairId) {
+      if (renderedPairs.has(s.pairId)) return;
+      renderedPairs.add(s.pairId);
+      if (s.id !== pairs[s.pairId].ids[0]) return;
+      renderRevisedPair(s.pairId, container);
+      return;
+    }
+
+    if (!s.incomplete) {
+      const span = document.createElement('span');
+      span.className = 'p3-sent';
+      span.textContent = s.text + ' ';
+      container.appendChild(span);
+      return;
+    }
+
+    const chosenIdx = p3choices[s.id] ?? 0;
+    const altIdx = chosenIdx === 0 ? 1 : 0;
+    const chosenOpt = s.fix.options[chosenIdx];
+    const altOpt = s.fix.options[altIdx];
+    const span = createRevisedSpan(chosenOpt.text, altOpt.strategy, altOpt.text);
+    span.addEventListener('click', () => { p3choices[s.id] = altIdx; buildRevised(); });
+    container.appendChild(span);
+  });
+}
+
+function renderRevisedPair(pairId, container) {
+  const pair = pairs[pairId];
+  const chosenIdx = p3choices[pairId] ?? 0;
+  const nextIdx = (chosenIdx + 1) % pair.options.length;
+  const chosenOpt = pair.options[chosenIdx];
+  const nextOpt   = pair.options[nextIdx];
+  const span = createRevisedSpan(chosenOpt.text, nextOpt.strategy, nextOpt.text, `Click to see next version (${pair.options.length} options)`);
+  span.addEventListener('click', () => { p3choices[pairId] = nextIdx; buildRevised(); });
+  container.appendChild(span);
+}
+
+function createRevisedSpan(chosenText, altStrategy, altText, switchLabel) {
+  const span = document.createElement('span');
+  span.className = 'p3-revised';
+  const tooltip = document.createElement('span');
+  tooltip.className = 'p3-tooltip';
+  tooltip.innerHTML = `<div class="tt-label">Alternative: ${altStrategy}</div>${altText}<div class="tt-switch">${switchLabel || 'Click to switch to this version'}</div>`;
+  span.appendChild(document.createTextNode(chosenText + ' '));
+  span.appendChild(tooltip);
+  return span;
+}
+
+buildText();
+</script>
+</body>
+</html>

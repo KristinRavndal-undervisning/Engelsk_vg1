@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentence Sort – Grammar Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a2e;
+    --surface: #16213e;
+    --surface2: #0f3460;
+    --correct: #2ecc71;
+    --correct-soft: #1a4a2e;
+    --fragment: #e67e22;
+    --fragment-soft: #4a2a0e;
+    --runon: #e74c3c;
+    --runon-soft: #4a0e0e;
+    --gold: #f1c40f;
+    --ink: #ecf0f1;
+    --ink-dim: #95a5a6;
+    --shadow: rgba(0,0,0,0.4);
+    --glow-correct: 0 0 20px rgba(46,204,113,0.4);
+    --glow-fragment: 0 0 20px rgba(230,126,34,0.4);
+    --glow-runon: 0 0 20px rgba(231,76,60,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; overflow: hidden; position: fixed; width: 100%; }
+
+  /* SCREENS */
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; transition: opacity 0.4s; }
+  .screen.hidden { opacity: 0; pointer-events: none; }
+
+  /* START SCREEN */
+  #startScreen { background: var(--bg); overflow-y: auto; justify-content: flex-start; padding-top: 2rem; padding-bottom: 2rem; }
+  .game-title { font-family: 'Lora', serif; font-size: clamp(1.8rem, 5vw, 3.2rem); font-weight: 600; color: var(--gold); text-align: center; margin-bottom: 0.3rem; text-shadow: 0 0 30px rgba(241,196,15,0.5); }
+  .game-subtitle { font-size: 0.95rem; color: var(--ink-dim); text-align: center; margin-bottom: 1.5rem; }
+  .category-preview { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; justify-content: center; }
+  .cat-pill { padding: 0.5rem 1.2rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+  .cat-pill.correct { background: var(--correct-soft); color: var(--correct); border: 1px solid var(--correct); }
+  .cat-pill.fragment { background: var(--fragment-soft); color: var(--fragment); border: 1px solid var(--fragment); }
+  .cat-pill.runon { background: var(--runon-soft); color: var(--runon); border: 1px solid var(--runon); }
+
+  .rules { background: var(--surface); border-radius: 12px; padding: 1rem 1.5rem; max-width: 500px; margin-bottom: 1.5rem; line-height: 1.7; font-size: 0.88rem; color: var(--ink-dim); }
+  .rules strong { color: var(--ink); display: block; margin-bottom: 0.4rem; font-size: 0.95rem; }
+  .rules li strong { display: inline; font-size: inherit; margin-bottom: 0; }
+  .rules li { margin-left: 1.2rem; margin-bottom: 0.2rem; }
+
+  .btn-start { font-family: 'DM Sans', sans-serif; font-size: 1.2rem; font-weight: 700; padding: 1rem 3rem; background: var(--gold); color: #1a1a2e; border: none; border-radius: 50px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.05em; }
+  .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(241,196,15,0.6); }
+
+  /* GAME SCREEN */
+  #gameScreen { background: var(--bg); justify-content: space-between; padding: 1rem 1.5rem; }
+
+  .hud { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 900px; padding: 0.5rem 0; padding-right: 10rem; }
+  .hud-score { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
+  .hud-lives { display: flex; gap: 0.4rem; font-size: 1.4rem; }
+  .hud-levelup { font-size: 0.95rem; font-weight: 700; color: var(--gold); min-width: 80px; text-align: center; opacity: 0; }
+  @keyframes levelPop { 0%{font-size:0.95rem;opacity:1;transform:none} 20%{font-size:1.5rem;opacity:1;transform:translateY(4px)} 40%{font-size:1.2rem;opacity:1;transform:translateY(2px)} 60%{font-size:1.5rem;opacity:1;transform:translateY(4px)} 80%{font-size:1.2rem;opacity:1;transform:translateY(2px)} 100%{font-size:0.95rem;opacity:1;transform:none} }
+  .hud-level { font-size: 0.85rem; color: var(--ink-dim); font-weight: 500; }
+  .hud-highscore { font-size: 0.85rem; color: var(--ink-dim); }
+
+  /* Sentence track */
+  .track-wrap { width: 100%; height: 90px; position: relative; overflow: hidden; background: var(--surface); border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .track-line { position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,255,255,0.04); }
+
+  .sentence-bubble {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface2);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 0.7rem 1.2rem;
+    font-family: 'Lora', serif;
+    font-size: clamp(0.78rem, 2vw, 0.95rem);
+    color: var(--ink);
+    white-space: nowrap;
+    max-width: 780px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    box-shadow: 0 4px 20px var(--shadow);
+    transition: box-shadow 0.15s;
+  }
+
+  /* Sort boxes */
+  .boxes-row { display: flex; gap: 1.2rem; width: 100%; max-width: 900px; }
+  .sort-box {
+    flex: 1;
+    border-radius: 14px;
+    padding: 1.2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .sort-box .box-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.4rem; display: block; }
+  .sort-box .box-key { font-size: 0.65rem; color: rgba(255,255,255,0.3); margin-top: 0.3rem; display: block; }
+  .sort-box .box-name { font-family: 'Lora', serif; font-size: 1rem; font-weight: 600; }
+
+  .sort-box.correct-box { background: var(--correct-soft); border-color: rgba(46,204,113,0.3); }
+  .sort-box.correct-box .box-label { color: var(--correct); }
+  .sort-box.correct-box .box-name { color: var(--correct); }
+  .sort-box.correct-box:hover, .sort-box.correct-box.active { border-color: var(--correct); box-shadow: var(--glow-correct); background: rgba(46,204,113,0.15); }
+
+  .sort-box.fragment-box { background: var(--fragment-soft); border-color: rgba(230,126,34,0.3); }
+  .sort-box.fragment-box .box-label { color: var(--fragment); }
+  .sort-box.fragment-box .box-name { color: var(--fragment); }
+  .sort-box.fragment-box:hover, .sort-box.fragment-box.active { border-color: var(--fragment); box-shadow: var(--glow-fragment); background: rgba(230,126,34,0.15); }
+
+  .sort-box.runon-box { background: var(--runon-soft); border-color: rgba(231,76,60,0.3); }
+  .sort-box.runon-box .box-label { color: var(--runon); }
+  .sort-box.runon-box .box-name { color: var(--runon); }
+  .sort-box.runon-box:hover, .sort-box.runon-box.active { border-color: var(--runon); box-shadow: var(--glow-runon); background: rgba(231,76,60,0.15); }
+
+  /* Feedback flash */
+  .flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; transition: opacity 0.1s; z-index: 50; }
+  .flash.correct { background: rgba(46,204,113,0.15); }
+  .flash.wrong { background: rgba(231,76,60,0.2); }
+  .flash.show { opacity: 1; }
+
+  /* Floating feedback text */
+  .float-text { position: fixed; font-size: 1.6rem; font-weight: 700; pointer-events: none; z-index: 60; animation: floatUp 0.8s ease forwards; }
+  .float-text.big { font-size: 2.4rem; left: 50% !important; top: 65% !important; margin-left: -120px; margin-top: -40px; animation: floatUpBig 2.2s ease forwards; z-index: 200; }
+  @keyframes floatUp { 0%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:0;transform:translateY(-80px) scale(1.3)} }
+  @keyframes floatUpSlow { 0%{opacity:1;transform:translateY(0)} 60%{opacity:1;transform:translateY(-30px)} 100%{opacity:0;transform:translateY(-60px)} }
+  @keyframes floatUpBig { 0%{opacity:1;transform:translateY(0) scale(1)} 70%{opacity:1;transform:translateY(-20px) scale(1.1)} 100%{opacity:0;transform:translateY(-60px) scale(1.2)} }
+
+  /* GAME OVER SCREEN */
+  #gameOverScreen { background: rgba(26,26,46,0.97); z-index: 40; }
+  .over-title { font-family: 'Lora', serif; font-size: clamp(2rem, 5vw, 3rem); color: var(--runon); margin-bottom: 0.5rem; text-shadow: 0 0 20px rgba(231,76,60,0.5); }
+  .over-score { font-size: 1.4rem; color: var(--gold); margin-bottom: 0.3rem; font-weight: 700; }
+  .over-highscore { font-size: 0.95rem; color: var(--ink-dim); margin-bottom: 2rem; }
+  .over-stats { background: var(--surface); border-radius: 10px; padding: 1rem 2rem; margin-bottom: 2rem; font-size: 0.9rem; color: var(--ink-dim); line-height: 2; text-align: center; }
+  .over-stats span { color: var(--ink); font-weight: 600; }
+  .btn-restart { font-family: 'DM Sans', sans-serif; font-size: 1rem; font-weight: 700; padding: 0.8rem 2.5rem; background: var(--runon); color: white; border: none; border-radius: 50px; cursor: pointer; transition: all 0.2s; margin-right: 1rem; }
+  .btn-restart:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(231,76,60,0.5); }
+
+  /* WIN / FIREWORKS SCREEN */
+  #winScreen { background: rgba(26,26,46,0.97); z-index: 40; }
+  .win-title { font-family: 'Lora', serif; font-size: clamp(2rem, 5vw, 3.5rem); color: var(--gold); margin-bottom: 0.5rem; text-shadow: 0 0 30px rgba(241,196,15,0.7); animation: pulse 1s ease infinite alternate; }
+  @keyframes pulse { from{text-shadow: 0 0 20px rgba(241,196,15,0.5)} to{text-shadow: 0 0 50px rgba(241,196,15,0.9)} }
+  .win-subtitle { font-size: 1.1rem; color: var(--ink-dim); margin-bottom: 1rem; }
+  #fireworksCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 39; }
+
+  /* BEHIND THE SCENES PANEL */
+  .bts-btn { position: fixed; top: 1rem; right: 1rem; z-index: 100; font-family: 'DM Sans', sans-serif; font-size: 0.72rem; font-weight: 500; padding: 0.35rem 0.8rem; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; color: var(--ink-dim); cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em; }
+  .bts-btn:hover { background: rgba(255,255,255,0.12); color: var(--ink); }
+
+  .bts-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+  .bts-overlay.open { opacity: 1; pointer-events: all; }
+  .bts-panel { background: var(--surface); border-radius: 14px; max-width: 700px; width: 100%; max-height: 80vh; overflow-y: auto; padding: 1.8rem 2rem; border: 1px solid rgba(255,255,255,0.08); }
+  .bts-panel h2 { font-family: 'Lora', serif; font-size: 1.3rem; color: var(--gold); margin-bottom: 1.5rem; }
+  .bts-section { margin-bottom: 1.5rem; }
+  .bts-section h3 { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.7rem; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .bts-section h3.correct { color: var(--correct); }
+  .bts-section h3.fragment { color: var(--fragment); }
+  .bts-section h3.runon { color: var(--runon); }
+  .bts-list { font-size: 0.82rem; color: var(--ink-dim); line-height: 1.9; font-family: 'Lora', serif; }
+  .bts-list li { list-style: none; padding: 0.1rem 0; }
+  .bts-close { display: block; margin: 1rem auto 0; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; padding: 0.5rem 1.5rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; color: var(--ink-dim); cursor: pointer; }
+  .bts-close:hover { color: var(--ink); border-color: rgba(255,255,255,0.4); }
+  /* Catch bubble */
+  .catch-bubble {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    background: radial-gradient(ellipse at center, #ff3300, #8b0000);
+    border: 3px solid #ff7755;
+    box-shadow: 0 0 24px rgba(255,60,0,0.95), 0 0 50px rgba(255,60,0,0.5), 0 0 80px rgba(255,30,0,0.3);
+    animation: catchPulse 0.35s ease infinite alternate;
+    z-index: 10;
+  }
+  @keyframes catchPulse {
+    from { box-shadow: 0 0 24px rgba(255,60,0,0.95), 0 0 50px rgba(255,60,0,0.5); transform: translateY(-50%) scale(1); }
+    to   { box-shadow: 0 0 40px rgba(255,80,0,1), 0 0 80px rgba(255,60,0,0.8); transform: translateY(-50%) scale(1.08); }
+  }
+
+  /* Streak bubble styles */
+  .sentence-bubble.streak2 {
+    border-color: #f1c40f;
+    box-shadow: 0 0 18px rgba(241,196,15,0.7), 0 0 40px rgba(241,196,15,0.3);
+    color: #fff;
+    background: #2a2516;
+  }
+  .sentence-bubble.streak3 {
+    border-color: #e67e22;
+    box-shadow: 0 0 24px rgba(230,126,34,0.9), 0 0 60px rgba(241,196,15,0.5), 0 0 4px #fff inset;
+    color: #fff;
+    background: #2a1a06;
+    animation: streakPulse 0.6s ease infinite alternate;
+  }
+  @keyframes streakPulse {
+    from { box-shadow: 0 0 24px rgba(230,126,34,0.9), 0 0 60px rgba(241,196,15,0.5); }
+    to   { box-shadow: 0 0 36px rgba(230,126,34,1),   0 0 80px rgba(241,196,15,0.8); }
+  }
+  .streak-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .streak-badge.s2 { background: #f1c40f; color: #1a1a2e; }
+  .streak-badge.s3 { background: #e67e22; color: #fff; animation: streakPulse 0.6s ease infinite alternate; }
+</style>
+</head>
+<body>
+
+<!-- BTS Button -->
+<button class="bts-btn" onclick="toggleBTS()">Behind the scenes</button>
+
+<!-- BTS Overlay -->
+<div class="bts-overlay" id="btsOverlay">
+  <div class="bts-panel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+      <h2 style="margin-bottom:0">Behind the scenes</h2>
+      <button class="bts-close" style="margin:0" onclick="toggleBTS()">Close</button>
+    </div>
+    <div id="btsSections"></div>
+    <button class="bts-close" onclick="toggleBTS()">Close</button>
+  </div>
+</div>
+
+<!-- Flash overlay -->
+<div class="flash" id="flash"></div>
+
+<!-- Fireworks canvas -->
+<canvas id="fireworksCanvas"></canvas>
+
+<!-- START SCREEN -->
+<div class="screen" id="startScreen">
+  <div class="game-title">Sentence Sort</div>
+  <div class="game-subtitle">How well do you know your sentences?</div>
+  <div class="category-preview">
+    <div class="cat-pill correct">Correct sentence</div>
+    <div class="cat-pill fragment">Fragment</div>
+    <div class="cat-pill runon">Run-on</div>
+  </div>
+  <div class="rules">
+    <strong>How to play</strong>
+    <ul>
+      <li>Sentences slide across the screen.</li>
+      <li>Click the correct box before the sentence disappears.</li>
+      <li>You have 3 lives – lose one for each mistake or missed sentence.</li>
+      <li>Speed increases every 15 points.</li>
+      <li>Click <strong>Behind the scenes</strong> at any time to study the sentence lists – the game will pause and wait for you.</li>
+      <li>You can also use keys:</li>
+    </ul>
+    <ul style="margin-top:0.4rem; margin-left:1rem;">
+      <li><strong>1</strong> = Correct</li>
+      <li><strong>2</strong> = Fragment</li>
+      <li><strong>3</strong> = Run-on</li>
+    </ul>
+  </div>
+  <button class="btn-start" onclick="startGame()">Play</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen hidden" id="gameScreen">
+  <div class="hud">
+    <div class="hud-highscore">Best: <span id="highscoreDisplay">0</span></div>
+    <div class="hud-levelup" id="levelUpDisplay"></div>
+    <div class="hud-score">Score: <span id="scoreDisplay">0</span></div>
+    <div class="hud-lives" id="livesDisplay">❤️❤️❤️</div>
+    <div class="hud-level">Level <span id="levelDisplay">1</span></div>
+  </div>
+
+  <div class="track-wrap" id="trackWrap">
+    <div class="track-line"></div>
+    <div class="sentence-bubble" id="sentenceBubble"></div>
+  </div>
+
+  <div class="boxes-row">
+    <div class="sort-box correct-box" id="boxCorrect" onclick="sortSentence('correct')">
+      <span class="box-label">Correct sentence</span>
+      <span class="box-name">Complete</span>
+      <span class="box-key">Press 1</span>
+    </div>
+    <div class="sort-box fragment-box" id="boxFragment" onclick="sortSentence('fragment')">
+      <span class="box-label">Incomplete sentence</span>
+      <span class="box-name">Fragment</span>
+      <span class="box-key">Press 2</span>
+    </div>
+    <div class="sort-box runon-box" id="boxRunon" onclick="sortSentence('runon')">
+      <span class="box-label">Run-on sentence</span>
+      <span class="box-name">Run-on</span>
+      <span class="box-key">Press 3</span>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER SCREEN -->
+<div class="screen hidden" id="gameOverScreen">
+  <div class="over-title">Game Over</div>
+  <div class="over-score">Score: <span id="finalScore">0</span></div>
+  <div class="over-highscore" id="overHighscore"></div>
+  <div class="over-stats" id="overStats"></div>
+  <div>
+    <button class="btn-restart" onclick="startGame()">Play again</button>
+    <button class="btn-restart" style="background:var(--surface2)" onclick="goToStart()">Menu</button>
+  </div>
+</div>
+
+<!-- WIN SCREEN -->
+<div class="screen hidden" id="winScreen">
+  <div class="win-title">🎉 You finished! 🎉</div>
+  <div class="win-subtitle">You sorted all the sentences!</div>
+  <div class="over-score">Final score: <span id="winScore">0</span></div>
+  <div class="over-highscore" id="winHighscore"></div>
+  <div class="over-stats" id="winStats"></div>
+  <div style="margin-top:1.5rem">
+    <button class="btn-restart" style="background:var(--gold);color:#1a1a2e" onclick="startGame()">Play again</button>
+    <button class="btn-restart" style="background:var(--surface2);margin-left:1rem" onclick="goToStart()">Menu</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// SENTENCE DATABASE
+// ============================================================
+const db = {
+  correct: [
+    "Sleep is essential for memory and concentration.",
+    "Bees play a vital role in pollinating our food.",
+    "Many young people dream of becoming influencers.",
+    "The internet has changed the way we communicate.",
+    "Regular exercise improves both physical and mental health.",
+    "Learning a new language takes time and practice.",
+    "Climate change is one of the biggest challenges of our time.",
+    "Reading books can expand your vocabulary significantly.",
+    "Social media can be both useful and harmful.",
+    "A balanced diet is important for staying healthy.",
+    "Travelling abroad exposes people to new cultures and ideas.",
+    "Getting enough sleep helps students perform better at school.",
+    "Recycling reduces the amount of waste sent to landfill.",
+    "Volunteering in your community can be very rewarding.",
+    "Smartphones have become an essential part of daily life.",
+    "Music can have a powerful effect on mood and emotions.",
+    "Air pollution is a serious problem in many cities.",
+    "Spending time in nature reduces stress and anxiety.",
+    "Critical thinking is a skill that benefits everyone.",
+    "Young people today face significant financial pressures.",
+    "Eating together as a family strengthens relationships.",
+    "Public transport is better for the environment than driving.",
+    "Creativity is just as important as academic knowledge.",
+    "Water is the most essential resource on the planet.",
+    "Many species of animals are currently at risk of extinction.",
+    "Cyberbullying causes serious harm to young people.",
+    "Governments have a responsibility to protect the environment.",
+    "Physical activity in schools improves academic performance.",
+    "Kindness and respect are the foundations of good communication.",
+    "A good night's sleep is one of the best things you can do for your brain.",
+    "Have you ever considered how much sleep you actually need?",
+    "Is social media making young people more anxious?",
+    "Do governments do enough to protect the environment?",
+    "Why do so many students struggle to maintain a healthy routine?",
+    "Can one person really make a difference when it comes to climate change?",
+    "In recent years, mental health awareness has grown significantly.",
+    "Despite its benefits, social media is often used irresponsibly.",
+    "Every morning, millions of bees leave their hives in search of flowers.",
+    "In many countries, young people face high levels of academic pressure.",
+    "Without enough sleep, even simple tasks become difficult to complete.",
+    "Over time, small changes in habits can lead to significant improvements.",
+    "In addition to being entertaining, travelling can be deeply educational.",
+    "For many students, the pressure to succeed begins at a very young age.",
+    "Although often overlooked, kindness is one of the most powerful tools we have.",
+    "After years of decline, some bee populations are finally beginning to recover.",
+    "Because the weather was perfect, we decided to spend the afternoon outside.",
+    "When people work together, they can achieve far more than they could alone.",
+    "If governments fail to act on climate change, future generations will pay the price.",
+    "Because sleep affects both mood and performance, it should be made a priority.",
+    "When students feel supported by their teachers, they are more likely to succeed."
+  ],
+  fragment: [
+    "Because sleep deprivation affects concentration and memory.",
+    "Which makes bees essential to the global food supply.",
+    "Although many influencers appear successful and happy.",
+    "Making it harder for students to focus in class.",
+    "Since the internet became widely available to the public.",
+    "A skill that takes years of practice to develop.",
+    "Even if something is technically allowed by law.",
+    "When people spend too much time on their phones.",
+    "The most important factor in maintaining good health.",
+    "Because climate change threatens ecosystems around the world.",
+    "Although exercise has many well-documented benefits.",
+    "Which is why so many students struggle during exam season.",
+    "A problem that affects millions of people every day.",
+    "When travellers make an effort to learn the local language.",
+    "Because bees depend on a diverse range of flowering plants.",
+    "Making every conversation a potential learning experience.",
+    "Since recycling alone cannot solve the plastic crisis.",
+    "A finding that most people would find surprising.",
+    "Although social media connects people across the world.",
+    "Which creates serious problems for local wildlife.",
+    "Because getting enough sleep improves academic performance.",
+    "The kind of skill that employers look for in candidates.",
+    "When young people feel unheard by those in authority.",
+    "A career that requires far more work than it appears.",
+    "Although public transport is often seen as inconvenient.",
+    "Which is one of the main reasons bee populations are declining.",
+    "Because curiosity is the foundation of all learning.",
+    "Making it difficult to maintain a healthy work-life balance.",
+    "Since many students rely on caffeine rather than sleep.",
+    "A choice that can have lasting consequences for the environment.",
+    "Not my problem.",
+    "A real waste of time.",
+    "Totally worth it.",
+    "No easy answers.",
+    "Too tired to think.",
+    "A surprisingly common mistake.",
+    "Not what most people expect.",
+    "Easier said than done.",
+    "A habit worth developing.",
+    "Far too little and far too late.",
+    "Whether social media does more harm than good.",
+    "Why so many young people feel anxious and overwhelmed.",
+    "How governments can do more to protect bee populations.",
+    "Whether a career as an influencer is worth pursuing.",
+    "Why sleep is still so often treated as optional.",
+    "Something worth thinking about?",
+    "Really the best we can do?",
+    "A problem we can actually solve?",
+    "Worth the effort in the long run?",
+    "The right choice for everyone?"
+  ],
+  runon: [
+    "Sleep is important for students, they often sacrifice it for extra study time.",
+    "Bees are essential for food production many people do not realise this.",
+    "Social media can be useful it can also be addictive and harmful.",
+    "Many teenagers want to become influencers, the reality is far more difficult.",
+    "Exercise improves mental health, most students do not get enough of it.",
+    "Climate change is a serious problem governments must act now.",
+    "Reading is good for your brain many young people prefer screens instead.",
+    "Travelling broadens the mind, it also builds confidence and independence.",
+    "Bees are dying at an alarming rate this is a threat to global food security.",
+    "A healthy diet improves concentration, most students skip breakfast anyway.",
+    "Sleep deprivation is dangerous it affects both mood and performance.",
+    "Influencers make their work look easy, building an audience takes years.",
+    "Recycling is important, it is not enough to solve the climate crisis on its own.",
+    "Music affects mood it can reduce stress and improve focus.",
+    "Many students feel pressure from social media, this affects their self-esteem.",
+    "Air pollution is a growing problem it causes serious health issues.",
+    "Cultural curiosity makes travel more meaningful most tourists ignore local culture.",
+    "Kindness costs nothing, it can make a significant difference to someone's day.",
+    "Bee populations are falling fast we need to act before it is too late.",
+    "Young people are under enormous pressure, mental health support is often lacking.",
+    "Spending time in nature reduces anxiety many people spend all day indoors.",
+    "Good communication is a skill, it must be practised regularly to improve.",
+    "Influencers rarely show the hard work behind their content this misleads their audience.",
+    "Sleep affects memory, students who sleep well perform better on tests.",
+    "Volunteering builds skills it also benefits the wider community.",
+    "Cyberbullying is a serious issue, schools often do not respond quickly enough.",
+    "Learning a language takes time many students give up too easily.",
+    "Public transport reduces emissions, most people still prefer to drive.",
+    "Water is essential for life yet millions of people lack access to clean water.",
+    "The influencer industry is growing fast it is also becoming more competitive.",
+    "Life is short make it count.",
+    "Time flies, use it well.",
+    "Words matter, choose them carefully.",
+    "Habits form slowly they are hard to break.",
+    "Sleep matters, do not ignore it.",
+    "Bees vanish we all suffer.",
+    "Screens glow minds drift.",
+    "Dreams are free, effort is not.",
+    "Change is hard it is also necessary.",
+    "Phones buzz, attention fades.",
+    "Sleep is often sacrificed for study, is that really worth it?",
+    "Influencers make it look easy have you seen the hours they work?",
+    "Bee populations are falling fast, does anyone actually care?",
+    "Social media connects us all why do so many people feel lonely?",
+    "Climate change is accelerating, are we doing enough to stop it?"
+  ]
+};
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let score = 0;
+let lives = 3;
+let level = 1;
+let highscore = 0;
+let correct = 0;
+let wrong = 0;
+let missed = 0;
+let streak = 0;
+let bonusPending = false; // true when next sentence should give bonus points
+let nextSentenceTimer = null; // tracks pending nextSentence setTimeout
+let catchCounter = 0;       // counts sentences in current 20-window
+let catchScheduled = false; // true when a catch bubble is due this window
+let catchSentenceTarget = 0;// which sentence in the window triggers the catch bubble
+let catchActive = false;    // catch bubble currently on screen
+let queue = [];
+let currentSentence = null;
+let animFrame = null;
+let bubbleX = 0;
+let bubbleWidth = 0;
+let trackWidth = 0;
+let speed = 1.2; // px per frame
+let lastTime = null;
+let gameActive = false;
+
+const BASE_SPEED = 1.2;
+const SPEED_INCREMENT = 0.25;
+const LEVEL_EVERY = 15;
+
+function buildQueue() {
+  const all = [];
+  db.correct.forEach(t => all.push({ text: t, type: 'correct' }));
+  db.fragment.forEach(t => all.push({ text: t, type: 'fragment' }));
+  db.runon.forEach(t => all.push({ text: t, type: 'runon' }));
+  // Shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
+
+function startGame() {
+  score = 0; lives = 3; level = 1; correct = 0; wrong = 0; missed = 0; streak = 0; bonusPending = false; catchGlobalCounter = 0; catchActive = false; if (nextSentenceTimer) { clearTimeout(nextSentenceTimer); nextSentenceTimer = null; } scheduleCatchWindow();
+  speed = BASE_SPEED;
+  queue = buildQueue();
+  showScreen('gameScreen');
+  updateHUD();
+  stopFireworks();
+  if (animFrame) cancelAnimationFrame(animFrame);
+  gameActive = true;
+  nextSentence();
+}
+
+function goToStart() {
+  gameActive = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  stopFireworks();
+  showScreen('startScreen');
+}
+
+function showScreen(id) {
+  ['startScreen','gameScreen','gameOverScreen','winScreen'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+function updateHUD() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('levelDisplay').textContent = level;
+  document.getElementById('highscoreDisplay').textContent = highscore;
+  const hearts = ['','❤️','❤️❤️','❤️❤️❤️'];
+  document.getElementById('livesDisplay').textContent = hearts[Math.max(0, lives)];
+}
+
+// ============================================================
+// SENTENCE ANIMATION
+// ============================================================
+const bubble = document.getElementById('sentenceBubble');
+const trackWrap = document.getElementById('trackWrap');
+
+function nextSentence() {
+  if (!gameActive) return;
+  if (queue.length === 0) { endGame(true); return; }
+  currentSentence = queue.pop();
+  bubble.textContent = currentSentence.text;
+  bubble.style.display = 'block';
+
+  // Apply streak styling only when bonus is pending
+  bubble.className = 'sentence-bubble';
+  const oldBadge = bubble.querySelector('.streak-badge');
+  if (oldBadge) oldBadge.remove();
+
+  if (bonusPending === 'x3') {
+    bubble.classList.add('streak3');
+    const badge = document.createElement('span');
+    badge.className = 'streak-badge s3';
+    badge.textContent = '🔥 3×';
+    bubble.appendChild(badge);
+  } else if (bonusPending === 'x2') {
+    bubble.classList.add('streak2');
+    const badge = document.createElement('span');
+    badge.className = 'streak-badge s2';
+    badge.textContent = '⭐ 2×';
+    bubble.appendChild(badge);
+  }
+
+  // Measure after render
+  requestAnimationFrame(() => {
+    trackWidth = trackWrap.offsetWidth || window.innerWidth;
+    bubbleWidth = bubble.offsetWidth;
+    bubbleX = trackWidth + 10;
+    bubble.style.left = bubbleX + 'px';
+    lastTime = null;
+    animFrame = requestAnimationFrame(animateBubble);
+  });
+}
+
+function animateBubble(ts) {
+  if (!gameActive) return;
+  if (!lastTime) lastTime = ts;
+  const dt = Math.min(ts - lastTime, 50);
+  lastTime = ts;
+
+  bubbleX -= speed * (dt / 16);
+  bubble.style.left = bubbleX + 'px';
+
+  // Sentence has passed the screen
+  if (bubbleX + bubbleWidth < -10) {
+    onMissed();
+    return;
+  }
+  animFrame = requestAnimationFrame(animateBubble);
+}
+
+function onMissed() {
+  streak = 0;
+  bonusPending = false;
+  missed++;
+  loseLife();
+  floatText('Missed!', '#e74c3c');
+  if (gameActive) {
+    const catchTookOver = checkCatchBubble();
+    if (!catchTookOver) scheduleNext(600);
+  }
+}
+
+// ============================================================
+// SORTING
+// ============================================================
+function sortSentence(chosen) {
+  if (!gameActive || !currentSentence) return;
+  cancelAnimationFrame(animFrame);
+  const bubbleRect = bubble.getBoundingClientRect();
+  const bubbleCentreX = bubbleRect.left + bubbleRect.width / 2;
+  bubble.style.display = 'none';
+
+  const isCorrect = chosen === currentSentence.type;
+  if (isCorrect) {
+    correct++;
+    streak++;
+
+    let points = 1;
+    let pointLabel = '+1 ✓';
+
+    // Award bonus on the sentence immediately after hitting milestone
+    if (bonusPending === 'x3') {
+      points = 3; pointLabel = '+3 🔥';
+      bonusPending = false;
+      streak = 0; // reset after 3x bonus
+    } else if (bonusPending === 'x2') {
+      points = 2; pointLabel = '+2 ⭐';
+      bonusPending = false;
+      // streak keeps counting toward 10
+    } else {
+      // Check milestones after incrementing streak
+      if (streak === 10) {
+        triggerStreakCelebration(true);
+        bonusPending = 'x3';
+      } else if (streak === 5) {
+        triggerStreakCelebration(false);
+        bonusPending = 'x2';
+      }
+    }
+
+    score += points;
+    flashScreen('correct');
+    floatText(pointLabel, points === 3 ? '#e67e22' : points === 2 ? '#f1c40f' : '#2ecc71', false, bubbleCentreX);
+    pulseBox('box' + capitalise(chosen));
+
+    if (score > highscore) highscore = score;
+    checkLevel();
+  } else {
+    streak = 0;
+    bonusPending = false;
+    wrong++;
+    loseLife();
+    flashScreen('wrong');
+    floatText('✗', '#e74c3c', false, bubbleCentreX);
+  }
+  updateHUD();
+  if (gameActive) {
+    const catchTookOver = checkCatchBubble();
+    if (!catchTookOver) scheduleNext(300);
+  }
+}
+
+function scheduleNext(delay) {
+  if (nextSentenceTimer) clearTimeout(nextSentenceTimer);
+  nextSentenceTimer = setTimeout(() => { nextSentenceTimer = null; nextSentence(); }, delay);
+}
+
+function capitalise(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function loseLife() {
+  lives--;
+  updateHUD();
+  if (lives <= 0) { setTimeout(() => endGame(false), 400); gameActive = false; }
+}
+
+function checkLevel() {
+  const newLevel = Math.floor(score / LEVEL_EVERY) + 1;
+  if (newLevel > level) {
+    level = newLevel;
+    speed = BASE_SPEED + (level - 1) * SPEED_INCREMENT;
+    const lu = document.createElement('div');
+    lu.className = 'float-text';
+    lu.textContent = '⬆ Level ' + level + '!';
+    lu.style.color = '#f1c40f';
+    lu.style.textShadow = '0 0 12px #f1c40f';
+    lu.style.fontSize = '1.4rem';
+    lu.style.left = '2rem';
+    lu.style.top = (window.innerHeight * 0.45) + 'px';
+    lu.style.animation = 'floatUpSlow 3s ease-out forwards';
+    document.body.appendChild(lu);
+    setTimeout(() => lu.remove(), 3000);
+  }
+}
+
+function endGame(win) {
+  gameActive = false;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  bubble.style.display = 'none';
+  if (score > highscore) highscore = score;
+
+  const statsHtml = `Correct: <span>${correct}</span> &nbsp;|&nbsp; Wrong: <span>${wrong}</span> &nbsp;|&nbsp; Missed: <span>${missed}</span> &nbsp;|&nbsp; Level reached: <span>${level}</span>`;
+  const isNewHighscore = score >= highscore && score > 0;
+  if (isNewHighscore) triggerHighscoreBurst();
+  const hsMsg = isNewHighscore ? '🏆 New best score!' : `Best this session: ${highscore}`;
+
+  if (win) {
+    document.getElementById('winScore').textContent = score;
+    document.getElementById('winHighscore').textContent = hsMsg;
+    document.getElementById('winStats').innerHTML = statsHtml;
+    showScreen('winScreen');
+    startFireworks();
+  } else {
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('overHighscore').textContent = hsMsg;
+    document.getElementById('overStats').innerHTML = statsHtml;
+    showScreen('gameOverScreen');
+  }
+}
+
+// ============================================================
+// VISUAL FEEDBACK
+// ============================================================
+function flashScreen(type) {
+  const el = document.getElementById('flash');
+  el.className = 'flash ' + type + ' show';
+  setTimeout(() => el.classList.remove('show'), 150);
+}
+
+function floatText(text, color, big, x) {
+  const el = document.createElement('div');
+  el.className = big ? 'float-text big' : 'float-text';
+  el.textContent = text;
+  el.style.color = color;
+  if (big) {
+    el.style.textShadow = '0 0 20px ' + color;
+  } else {
+    // Use provided x position or fall back to fixed position
+    const posX = (x !== undefined) ? x : (window.innerWidth * 0.65);
+    el.style.left = posX + 'px';
+    el.style.top = (window.innerHeight / 2 - 60) + 'px';
+  }
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), big ? 2200 : 800);
+}
+
+function pulseBox(id) {
+  const box = document.getElementById(id);
+  box.classList.add('active');
+  setTimeout(() => box.classList.remove('active'), 300);
+}
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (e.key === '1') sortSentence('correct');
+  else if (e.key === '2') sortSentence('fragment');
+  else if (e.key === '3') sortSentence('runon');
+});
+
+// ============================================================
+// CATCH BUBBLE
+// ============================================================
+let catchGlobalCounter = 0; // counts every sentence shown
+let catchNextAt = 0;         // absolute sentence number for next catch
+
+function scheduleCatchWindow() {
+  // Schedule next catch between 10 and 30 sentences from now
+  catchNextAt = catchGlobalCounter + 10 + Math.floor(Math.random() * 10);
+}
+
+function checkCatchBubble() {
+  if (catchActive || bonusPending) return false;
+  catchGlobalCounter++;
+  if (catchGlobalCounter >= catchNextAt) {
+    catchActive = true;
+    // Stop any running sentence animation and hide bubble
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    bubble.style.display = 'none';
+    showCatchBubble();
+    return true; // signal to nextSentence to wait
+  }
+  return false;
+}
+
+function showCatchBubble() {
+  const existing = document.getElementById('catchBubble');
+  if (existing) existing.remove();
+
+  const el = document.createElement('div');
+  el.className = 'catch-bubble';
+  el.id = 'catchBubble';
+  el.textContent = '🚀 Catch me if you can!';
+  trackWrap.appendChild(el);
+
+  // Position off right edge
+  let cx = trackWrap.offsetWidth + 10;
+  el.style.left = cx + 'px';
+
+  const catchSpeed = speed * 3;
+  let lastT = null;
+  let catchDone = false;
+
+  function animateCatch(ts) {
+    if (catchDone) return;
+    if (!gameActive) { el.remove(); catchActive = false; catchDone = true; return; }
+    if (!lastT) lastT = ts;
+    const dt = Math.min(ts - lastT, 50);
+    lastT = ts;
+    cx -= catchSpeed * (dt / 16);
+    el.style.left = cx + 'px';
+    if (cx + el.offsetWidth < -10) {
+      catchDone = true;
+      el.remove();
+      catchActive = false;
+      scheduleCatchWindow();
+      scheduleNext(200);
+      return;
+    }
+    requestAnimationFrame(animateCatch);
+  }
+
+  el.addEventListener('click', () => {
+    if (catchDone) return;
+    catchDone = true;
+    score += 5;
+    highscore = Math.max(highscore, score);
+    updateHUD();
+    floatText('+5 🚀', '#ff4400');
+    el.remove();
+    catchActive = false;
+    scheduleCatchWindow();
+    scheduleNext(200);
+  });
+
+  requestAnimationFrame(animateCatch);
+}
+
+// ============================================================
+// STREAK CELEBRATION
+// ============================================================
+function triggerStreakCelebration(big) {
+  const count = big ? 8 : 4;
+  const canvas2 = document.getElementById('fireworksCanvas');
+  canvas2.width = window.innerWidth;
+  canvas2.height = window.innerHeight;
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      launchFirework();
+      if (!fwFrame) fwLoop();
+    }, i * 150);
+  }
+}
+
+// ============================================================
+// HIGHSCORE BURST
+// ============================================================
+function triggerHighscoreBurst() {
+  const canvas2 = document.getElementById('fireworksCanvas');
+  canvas2.width = window.innerWidth;
+  canvas2.height = window.innerHeight;
+  for (let i = 0; i < 4; i++) {
+    setTimeout(() => {
+      launchFirework();
+      if (!fwFrame) fwLoop();
+    }, i * 150);
+  }
+}
+
+// ============================================================
+// FIREWORKS
+// ============================================================
+const canvas = document.getElementById('fireworksCanvas');
+const ctx = canvas.getContext('2d');
+let fwParticles = [];
+let fwFrame = null;
+let fwActive = false;
+
+function startFireworks() {
+  fwActive = true;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  fwLoop();
+  const interval = setInterval(() => {
+    if (!fwActive) { clearInterval(interval); return; }
+    for (let i = 0; i < 3; i++) launchFirework();
+  }, 400);
+  setTimeout(() => { fwActive = false; }, 8000);
+}
+
+function stopFireworks() {
+  fwActive = false;
+  fwParticles = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (fwFrame) cancelAnimationFrame(fwFrame);
+}
+
+function launchFirework() {
+  const x = Math.random() * canvas.width;
+  const y = Math.random() * canvas.height * 0.6;
+  const colors = ['#f1c40f','#2ecc71','#e74c3c','#3498db','#9b59b6','#e67e22','#1abc9c'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  for (let i = 0; i < 60; i++) {
+    const angle = (Math.PI * 2 / 60) * i;
+    const speed = 2 + Math.random() * 4;
+    fwParticles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, alpha: 1, color, size: 2 + Math.random() * 2 });
+  }
+}
+
+function fwLoop() {
+  if (!fwActive && fwParticles.length === 0) { ctx.clearRect(0, 0, canvas.width, canvas.height); fwFrame = null; return; }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  fwParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.alpha -= 0.018; p.vx *= 0.99;
+    ctx.save(); ctx.globalAlpha = Math.max(0, p.alpha);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  });
+  fwParticles = fwParticles.filter(p => p.alpha > 0);
+  fwFrame = requestAnimationFrame(fwLoop);
+}
+
+// ============================================================
+// BEHIND THE SCENES
+// ============================================================
+function buildBTS() {
+  const container = document.getElementById('btsSections');
+  const categories = [
+    { key: 'correct', label: 'Correct sentences', cls: 'correct' },
+    { key: 'fragment', label: 'Incomplete sentences (fragments)', cls: 'fragment' },
+    { key: 'runon', label: 'Run-on sentences', cls: 'runon' }
+  ];
+  container.innerHTML = '';
+  categories.forEach(cat => {
+    const sorted = [...db[cat.key]].sort((a, b) => a.localeCompare(b));
+    const sec = document.createElement('div');
+    sec.className = 'bts-section';
+    sec.innerHTML = `<h3 class="${cat.cls}">${cat.label} (${sorted.length})</h3>`;
+    const ul = document.createElement('ul');
+    ul.className = 'bts-list';
+    sorted.forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = t;
+      ul.appendChild(li);
+    });
+    sec.appendChild(ul);
+    container.appendChild(sec);
+  });
+}
+
+let pausedByBTS = false;
+
+function toggleBTS() {
+  const overlay = document.getElementById('btsOverlay');
+  const isOpen = overlay.classList.contains('open');
+  if (!isOpen) {
+    buildBTS();
+    // Pause game if active
+    if (gameActive) {
+      pausedByBTS = true;
+      gameActive = false;
+      if (animFrame) cancelAnimationFrame(animFrame);
+    }
+  } else {
+    // Resume game if it was paused by BTS
+    if (pausedByBTS) {
+      pausedByBTS = false;
+      gameActive = true;
+      lastTime = null;
+      animFrame = requestAnimationFrame(animateBubble);
+    }
+  }
+  overlay.classList.toggle('open');
+}
+
+// Close BTS on outside click
+document.getElementById('btsOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('btsOverlay')) toggleBTS();
+});
+</script>
+</body>
+</html>

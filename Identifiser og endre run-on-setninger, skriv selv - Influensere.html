@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Influencer Dream – Run-on Sentence Exercise</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4f9;
+    --paper: #fefefe;
+    --ink: #2a2520;
+    --ink-light: #6b6560;
+    --accent: #7c4dbd;
+    --accent-soft: #ece6f7;
+    --accent2: #2980b9;
+    --accent2-soft: #d3e6f5;
+    --gold: #b8860b;
+    --selected: #e8b84b;
+    --selected-bg: #fef9ec;
+    --correct: #27ae60;
+    --correct-bg: #eafaf1;
+    --wrong: #e74c3c;
+    --wrong-bg: #fdecea;
+    --shadow: rgba(42,37,32,0.08);
+    --border: #d4cee0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--ink); min-height: 100vh; padding: 2rem 1rem 4rem; }
+  .page-wrap { max-width: 960px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+  header::after { content: ''; display: block; width: 60px; height: 3px; background: var(--accent); margin: 1rem auto 0; border-radius: 2px; }
+  .tag { display: inline-block; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); padding: 0.25rem 0.75rem; border-radius: 20px; margin-bottom: 0.8rem; }
+  h1 { font-family: 'Lora', serif; font-size: clamp(1.5rem, 4vw, 2.2rem); font-weight: 600; color: var(--ink); line-height: 1.2; margin-bottom: 0.4rem; }
+  .subtitle { font-size: 0.9rem; color: var(--ink-light); font-weight: 300; }
+
+  .instructions { background: var(--paper); border: 1px solid var(--border); border-left: 4px solid var(--accent2); border-radius: 8px; padding: 1.2rem 1.5rem; margin-bottom: 2rem; font-size: 0.88rem; line-height: 1.7; color: var(--ink-light); }
+  .instructions strong { color: var(--ink); }
+  .instructions ol { padding-left: 1.2rem; margin-top: 0.5rem; }
+  .instructions li { margin-bottom: 0.3rem; }
+
+  .progress-wrap { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+  .progress-track { flex: 1; height: 6px; background: var(--border); border-radius: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--gold)); border-radius: 10px; transition: width 0.4s ease; width: 0%; }
+  .progress-label { font-size: 0.8rem; color: var(--ink-light); white-space: nowrap; font-weight: 500; }
+
+  .text-card { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 2rem 2.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 12px var(--shadow); line-height: 2; }
+  .para-break { display: block; height: 1.2em; }
+
+  .sent { font-family: 'Lora', serif; font-size: 1.05rem; line-height: 1.95; cursor: pointer; border-radius: 4px; padding: 1px 2px; transition: background 0.15s, box-shadow 0.15s; }
+  .sent:hover { background: rgba(124,77,189,0.07); box-shadow: 0 2px 8px rgba(124,77,189,0.1); }
+  .sent.selected { background: var(--selected-bg); box-shadow: 0 0 0 2px var(--selected); color: #7a5c00; }
+  .sent.correct-pick { background: var(--correct-bg); box-shadow: 0 0 0 2px var(--correct); color: #1a6b3c; }
+  .sent.wrong-pick { background: var(--wrong-bg); box-shadow: 0 0 0 2px var(--wrong); color: #7a1a1a; animation: shake 0.3s ease; }
+  @keyframes shake { 0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)} }
+
+  .action-row { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  button { font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; padding: 0.6rem 1.4rem; border: none; border-radius: 6px; cursor: pointer; transition: all 0.18s; letter-spacing: 0.02em; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #6a3daa; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124,77,189,0.3); }
+  .btn-secondary { background: transparent; color: var(--ink-light); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--bg); color: var(--ink); }
+  .btn-blue { background: var(--accent2); color: white; }
+  .btn-blue:hover { background: #1a6fa8; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(41,128,185,0.3); }
+
+  .feedback { border-radius: 8px; padding: 1rem 1.4rem; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem; display: none; }
+  .feedback.show { display: block; animation: fadeIn 0.3s ease; }
+  .feedback.success { background: var(--correct-bg); border-left: 4px solid var(--correct); color: #1a5c35; }
+  .feedback.error { background: var(--wrong-bg); border-left: 4px solid var(--wrong); color: #7a1a1a; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
+
+  #phase2, #phase3 { display: none; animation: fadeIn 0.5s ease; }
+  .phase-header { text-align: center; margin: 2rem 0 1.5rem; padding-top: 2rem; border-top: 2px dashed var(--border); }
+  .phase-header h2 { font-family: 'Lora', serif; font-size: 1.5rem; color: var(--ink); margin-bottom: 0.4rem; }
+  .phase-header p { font-size: 0.88rem; color: var(--ink-light); max-width: 640px; margin: 0 auto; line-height: 1.6; }
+
+  /* Phase 2 flowing text with edit boxes */
+  .p2-flow { font-family: 'Lora', serif; font-size: 1.02rem; line-height: 2; background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 2rem 2.5rem; box-shadow: 0 2px 12px var(--shadow); margin-bottom: 1.5rem; }
+  .p2-normal { font-family: 'Lora', serif; font-size: 1.02rem; line-height: 2; }
+
+  .edit-box { display: block; margin: 0.5rem 0; border: 1px solid var(--border); border-radius: 6px; background: var(--paper); padding: 0.75rem 1rem 0.5rem; }
+  .edit-box.submitted { border-color: #b0d8b8; background: #f6fdf7; }
+  .edit-type-label { font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--wrong); margin-bottom: 0.4rem; display: block; }
+
+  .edit-area { font-family: 'Lora', serif; font-size: 1.02rem; line-height: 1.9; outline: none; width: 100%; display: block; color: var(--ink); padding: 0.1rem 0; min-height: 2em; white-space: pre-wrap; word-break: break-word; }
+  .edit-area mark { background: #fff3b0; color: inherit; border-radius: 2px; padding: 0 1px; font-style: normal; }
+  .edit-area[contenteditable="false"] { color: var(--ink); opacity: 0.85; }
+
+  .edit-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.3rem; }
+  .edit-hint { font-family: 'DM Sans', sans-serif; font-size: 0.72rem; color: var(--ink-light); font-style: italic; }
+  .edit-hint.warn { color: var(--wrong); }
+  .btn-submit-small { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 500; padding: 0.2rem 0.7rem; border: 1px solid var(--accent); border-radius: 4px; background: transparent; color: var(--accent); cursor: pointer; transition: all 0.15s; }
+  .btn-submit-small:hover:not(:disabled) { background: var(--accent); color: white; }
+  .btn-submit-small:disabled { border-color: var(--correct); color: var(--correct); cursor: default; }
+
+  .p2-progress { text-align: center; font-size: 0.85rem; color: var(--ink-light); margin-bottom: 1.2rem; font-weight: 500; }
+  .p2-done-banner { background: var(--correct-bg); border: 1px solid var(--correct); border-radius: 10px; padding: 1.2rem 1.8rem; text-align: center; font-size: 0.95rem; color: #1a5c35; display: none; animation: fadeIn 0.4s ease; margin-bottom: 1rem; }
+  .p2-done-banner strong { font-size: 1.1rem; display: block; margin-bottom: 0.3rem; }
+  .p2-btn-row { text-align: center; display: none; margin-top: 0.5rem; }
+
+  /* Phase 3 – three columns */
+  .p3-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem; }
+  .p3-col-label { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-light); margin-bottom: 0.6rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+  .p3-col-label.suggestion-label { color: var(--correct); }
+  .p3-text { background: var(--paper); border: 1px solid var(--border); border-radius: 10px; padding: 1.4rem 1.6rem; box-shadow: 0 2px 12px var(--shadow); line-height: 2; font-size: 0.93rem; }
+  .p3-sent { font-family: 'Lora', serif; line-height: 1.9; }
+  .p3-original-runon { font-family: 'Lora', serif; line-height: 1.9; background: var(--selected-bg); border-bottom: 1px solid var(--selected); border-radius: 3px; padding: 0 3px; color: #7a5c00; }
+  .p3-student { font-family: 'Lora', serif; line-height: 1.9; background: #dde4ff; border-bottom: 1px solid #8f9de0; border-radius: 3px; padding: 0 3px; color: #1a1f6a; }
+  .p3-student.alt { background: #eef2ff; border-bottom-color: #b8c2f0; color: #2e3680; }
+  .p3-suggestion { font-family: 'Lora', serif; line-height: 1.9; background: #e8f5e9; border-bottom: 1px solid #a5d6a7; border-radius: 3px; padding: 0 3px; color: #1a5c35; cursor: pointer; position: relative; transition: background 0.15s; }
+  .p3-suggestion:hover { background: #c8e6c9; }
+
+  .p3-tooltip { display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #2a2520; color: #f7f5f0; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; line-height: 1.5; padding: 0.6rem 0.9rem; border-radius: 7px; width: max-content; max-width: 280px; z-index: 100; box-shadow: 0 4px 16px rgba(0,0,0,0.25); white-space: normal; text-align: left; pointer-events: none; }
+  .p3-tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #2a2520; }
+  .p3-tooltip .tt-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: #a5d6a7; margin-bottom: 0.25rem; }
+  .p3-tooltip .tt-switch { margin-top: 0.4rem; font-size: 0.75rem; color: #b0c4de; }
+  .p3-suggestion:hover .p3-tooltip { display: block; }
+
+  .suggestion-notice { background: #f0fdf4; border: 1px solid #a5d6a7; border-radius: 8px; padding: 0.9rem 1.2rem; font-size: 0.85rem; color: #1a5c35; margin-bottom: 1.2rem; line-height: 1.6; }
+  .suggestion-notice strong { display: block; margin-bottom: 0.2rem; font-size: 0.9rem; }
+
+  .reflection-box { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 10px; padding: 1.4rem 1.8rem; margin-top: 0.5rem; font-size: 0.92rem; line-height: 1.7; color: #3a1f7a; }
+  .reflection-box .ref-label { font-family: 'DM Sans', sans-serif; font-size: 0.7rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; display: block; }
+  .reflection-box p { font-family: 'Lora', serif; font-style: italic; font-size: 1rem; }
+
+  .deco { display: flex; gap: 5px; justify-content: center; margin: 1rem 0; }
+  .deco span { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+  .deco span:nth-child(2) { background: var(--gold); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="tag">English Grammar – VGS</div>
+    <h1>The Influencer Dream</h1>
+    <p class="subtitle">An exercise in identifying and correcting run-on sentences</p>
+  </header>
+
+  <!-- PHASE 1 -->
+  <div id="phase1">
+    <div class="instructions">
+      <strong>Part 1 – Find the run-on sentences</strong>
+      <ol>
+        <li>Read the text carefully. Four sentences are run-ons, meaning that two complete sentences have been incorrectly joined without proper punctuation or a connecting word.</li>
+        <li>Hover over a sentence to highlight it. <strong>Click</strong> any sentence you believe is a run-on.</li>
+        <li>Click a selected sentence again to deselect it.</li>
+        <li>When you are ready, press <strong>Check answers</strong>. You will see which selections are wrong, but the key is not revealed.</li>
+        <li>Correct any mistakes and check again – repeat until all four are found.</li>
+      </ol>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">0 / 4 selected</div>
+    </div>
+    <div class="text-card" id="textContainer"></div>
+    <div class="action-row">
+      <button class="btn-primary" onclick="checkPhase1()">Check answers</button>
+      <button class="btn-secondary" onclick="resetPhase1()">Reset selections</button>
+    </div>
+    <div class="feedback" id="fb1"></div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div id="phase2">
+    <div class="phase-header">
+      <div class="deco"><span></span><span></span><span></span></div>
+      <h2>Part 2 – Fix the run-on sentences</h2>
+      <p>The text flows below. Where a run-on sentence appears, an editing box opens in the flow. The run-on is highlighted. Edit the text in the box to fix it, then submit. You must change something before you can move on.</p>
+    </div>
+    <div id="p2progress" class="p2-progress">0 / 4 submitted</div>
+    <div id="p2flow"></div>
+    <div class="p2-done-banner" id="p2done">
+      <strong>All done!</strong> You have rewritten all four run-on sentences. Well done – scroll down to see how your version compares.
+    </div>
+    <div class="p2-btn-row" id="p2btnRow">
+      <button class="btn-blue" onclick="showPhase3()">Compare texts →</button>
+    </div>
+  </div>
+
+  <!-- PHASE 3 -->
+  <div id="phase3">
+    <div class="phase-header">
+      <div class="deco"><span></span><span></span><span></span></div>
+      <h2>Part 3 – Compare the texts</h2>
+    </div>
+    <div class="suggestion-notice">
+      <strong>About the right-hand column</strong>
+      The suggested fixes shown in green are examples of correct solutions – not the only valid answers. There are many ways to fix a run-on sentence. Hover over any green sentence to see an alternative suggestion. Click to switch between them.
+    </div>
+    <div class="p3-columns">
+      <div>
+        <div class="p3-col-label">Original text</div>
+        <div class="p3-text" id="p3Original"></div>
+      </div>
+      <div>
+        <div class="p3-col-label">Your version</div>
+        <div class="p3-text" id="p3Student"></div>
+      </div>
+      <div>
+        <div class="p3-col-label suggestion-label">Suggested fixes (not a key)</div>
+        <div class="p3-text" id="p3Suggestion"></div>
+      </div>
+    </div>
+    <div class="reflection-box">
+      <span class="ref-label">A question to think about</span>
+      <p>When you compare your version with the suggested fixes, what differences do you notice – and do those differences affect the meaning or the flow of the text?</p>
+    </div>
+  </div>
+
+</div>
+<script>
+const sentences = [
+  // INTRODUCTION
+  { id: 1, text: "In recent years, becoming a social media influencer has become one of the most popular career dreams among young people.", incomplete: false },
+  {
+    id: 2, text: "Many teenagers follow influencers daily, they see their lives as exciting, independent, and financially rewarding.",
+    incomplete: true, type: "comma splice",
+    fix: {
+      options: [
+        { strategy: "Split into two sentences", text: "Many teenagers follow influencers daily. They see their lives as exciting, independent, and financially rewarding.", comment: "Well done. Splitting the run-on into two sentences gives each idea its own clear structure." },
+        { strategy: "Add a conjunction", text: "Many teenagers follow influencers daily and see their lives as exciting, independent, and financially rewarding.", comment: "Well done. Adding 'and' and removing the comma creates a proper compound predicate." }
+      ]
+    }
+  },
+  { id: 3, text: "However, the reality of this career path is more complicated than it first appears.", incomplete: false },
+
+  // BODY
+  { id: 4, text: "There are genuine reasons why an influencer career appeals to so many young people.", incomplete: false, paragraphBreak: true },
+  {
+    id: 5, text: "The work appears flexible and creative influencers seem to be their own boss with no fixed hours or office.",
+    incomplete: true, type: "fused sentence",
+    fix: {
+      options: [
+        { strategy: "Split into two sentences", text: "The work appears flexible and creative. Influencers seem to be their own boss with no fixed hours or office.", comment: "Well done. Splitting the fused sentence with a full stop gives each idea its own clear structure." },
+        { strategy: "Add a conjunction", text: "The work appears flexible and creative, as influencers seem to be their own boss with no fixed hours or office.", comment: "Well done. Adding 'as' explains the reason and fixes the run-on." }
+      ]
+    }
+  },
+  { id: 6, text: "For those who are passionate about fashion, fitness, travel, or food, the idea of building a career around that passion is genuinely appealing.", incomplete: false },
+  { id: 7, text: "At the same time, there are significant challenges that most aspiring influencers underestimate.", incomplete: false },
+  {
+    id: 8, text: "Building a large and loyal audience takes years of consistent effort, most people who try never reach a level where they can earn a reliable income.",
+    incomplete: true, type: "comma splice",
+    fix: {
+      options: [
+        { strategy: "Split into two sentences", text: "Building a large and loyal audience takes years of consistent effort. As a result, most people who try never reach a level where they can earn a reliable income.", comment: "Well done. Splitting the run-on and adding 'As a result' makes the consequence clear and fixes the sentence." },
+        { strategy: "Add a relative clause", text: "Building a large and loyal audience takes years of consistent effort, which means that most people who try never reach a level where they can earn a reliable income.", comment: "Well done. Adding 'which means that' creates a relative clause that connects the consequence to the effort required." }
+      ]
+    }
+  },
+  { id: 9, text: "Successful influencers also work far longer hours than most of their followers realise, managing budgets, negotiating with brands, and constantly producing new material.", incomplete: false },
+  {
+    id: 10, text: "The income is rarely stable it can disappear quickly if audience interests shift or a platform changes its rules.",
+    incomplete: true, type: "fused sentence",
+    fix: {
+      options: [
+        { strategy: "Split into two sentences", text: "The income is rarely stable. In fact, it can disappear quickly if audience interests shift or a platform changes its rules.", comment: "Well done. Splitting the fused sentence and adding 'In fact' gives the second point extra emphasis and fixes the run-on." },
+        { strategy: "Add a conjunction", text: "The income is rarely stable, as it can disappear quickly if audience interests shift or a platform changes its rules.", comment: "Well done. Adding 'as' explains the reason and fixes the run-on." }
+      ]
+    }
+  },
+  { id: 11, text: "Understanding both the appeal and the risks is therefore essential for anyone considering this path seriously.", incomplete: false },
+
+  // CONCLUSION
+  { id: 12, text: "Wanting to become an influencer is not an unrealistic dream, but it requires the same dedication and planning as any other career.", incomplete: false, paragraphBreak: true },
+  { id: 13, text: "Those who succeed treat it as a business and invest time in developing real skills in communication, marketing, and content creation.", incomplete: false },
+  { id: 14, text: "With the right approach, it is a career that can work, but it rarely happens by accident.", incomplete: false }
+];
+
+const correctIds = new Set(sentences.filter(s => s.incomplete).map(s => s.id));
+const TOTAL = correctIds.size;
+let selected = new Set();
+let phase1Done = false;
+const studentEdits = {};
+const p3choices = {};
+
+// ============================================================
+// PHASE 1
+// ============================================================
+function buildText() {
+  const container = document.getElementById('textContainer');
+  container.innerHTML = '';
+  sentences.forEach(s => {
+    if (s.paragraphBreak) container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+    const span = document.createElement('span');
+    span.className = 'sent';
+    span.dataset.id = s.id;
+    span.textContent = s.text + ' ';
+    span.addEventListener('click', () => toggleSentence(s.id));
+    container.appendChild(span);
+  });
+}
+
+function toggleSentence(id) {
+  if (phase1Done) return;
+  const span = document.querySelector(`.sent[data-id="${id}"]`);
+  if (selected.has(id)) { selected.delete(id); span.classList.remove('selected'); }
+  else { selected.add(id); span.classList.add('selected'); }
+  updateProgress();
+  clearFeedback('fb1');
+  clearSentenceStates();
+}
+
+function clearSentenceStates() {
+  document.querySelectorAll('.sent').forEach(s => s.classList.remove('correct-pick', 'wrong-pick'));
+}
+
+function updateProgress() {
+  const n = selected.size;
+  document.getElementById('progressFill').style.width = Math.min(n / TOTAL * 100, 100) + '%';
+  document.getElementById('progressLabel').textContent = `${n} / ${TOTAL} selected`;
+}
+
+function checkPhase1() {
+  clearSentenceStates();
+  let wrongCount = 0;
+  selected.forEach(id => {
+    const span = document.querySelector(`.sent[data-id="${id}"]`);
+    if (correctIds.has(id)) { span.classList.add('correct-pick'); }
+    else { span.classList.add('wrong-pick'); wrongCount++; }
+  });
+  const missed = [...correctIds].filter(id => !selected.has(id)).length;
+  const fb = document.getElementById('fb1');
+  if (wrongCount === 0 && missed === 0) {
+    fb.className = 'feedback success show';
+    fb.innerHTML = `<strong>Excellent!</strong> You found all ${TOTAL} run-on sentences. Scroll down to begin Part 2.`;
+    phase1Done = true;
+    setTimeout(showPhase2, 1200);
+  } else {
+    let msg = '';
+    if (wrongCount > 0) msg += `<strong>${wrongCount} incorrect selection${wrongCount > 1 ? 's' : ''}</strong> – ${wrongCount > 1 ? 'these are' : 'this is'} not a run-on sentence${wrongCount > 1 ? 's' : ''}. `;
+    if (missed > 0) msg += `<strong>${missed} run-on sentence${missed > 1 ? 's' : ''} not yet found.</strong> `;
+    msg += 'Correct your selections and try again.';
+    fb.className = 'feedback error show';
+    fb.innerHTML = msg;
+  }
+}
+
+function resetPhase1() {
+  selected.clear();
+  clearSentenceStates();
+  document.querySelectorAll('.sent').forEach(s => s.classList.remove('selected'));
+  updateProgress();
+  clearFeedback('fb1');
+}
+
+function clearFeedback(id) {
+  const el = document.getElementById(id);
+  el.className = 'feedback';
+  el.innerHTML = '';
+}
+
+// ============================================================
+// PHASE 2
+// ============================================================
+let p2submitted = 0;
+
+function getNeighborText(id, offset) {
+  const idx = sentences.findIndex(s => s.id === id);
+  const neighbor = sentences[idx + offset];
+  return neighbor ? neighbor.text : null;
+}
+
+function showPhase2() {
+  document.getElementById('phase2').style.display = 'block';
+  document.getElementById('phase2').scrollIntoView({ behavior: 'smooth' });
+  buildP2Flow();
+}
+
+function buildP2Flow() {
+  const container = document.getElementById('p2flow');
+  container.innerHTML = '';
+  const flow = document.createElement('div');
+  flow.className = 'p2-flow';
+
+  let i = 0;
+  while (i < sentences.length) {
+    const s = sentences[i];
+    if (s.paragraphBreak) {
+      flow.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+    }
+    if (s.incomplete) {
+      flow.appendChild(buildEditBox(s));
+    } else {
+      const span = document.createElement('span');
+      span.className = 'p2-normal';
+      span.textContent = s.text + ' ';
+      flow.appendChild(span);
+    }
+    i++;
+  }
+  container.appendChild(flow);
+}
+
+function buildEditBox(s) {
+  const box = document.createElement('div');
+  box.className = 'edit-box';
+  box.id = `editbox-${s.id}`;
+
+  const typeLabel = document.createElement('span');
+  typeLabel.className = 'edit-type-label';
+  typeLabel.textContent = s.type === 'comma splice' ? 'Comma splice' : 'Fused sentence';
+  box.appendChild(typeLabel);
+
+  const area = document.createElement('div');
+  area.className = 'edit-area';
+  area.id = `ta-${s.id}`;
+  area.contentEditable = 'true';
+  area.spellcheck = false;
+
+  area.innerHTML = s.text;
+
+  const originalText = s.text.trim();
+
+  const hint = document.createElement('span');
+  hint.className = 'edit-hint';
+  hint.id = `hint-${s.id}`;
+  hint.textContent = 'Edit the highlighted sentence to fix the run-on.';
+
+  area.addEventListener('input', () => {
+    const changed = area.innerText.trim() !== originalText;
+    hint.textContent = changed ? 'Looking good – press Submit when ready.' : 'Edit the highlighted sentence to fix the run-on.';
+    hint.classList.toggle('warn', !changed);
+  });
+
+  box.appendChild(area);
+
+  const footer = document.createElement('div');
+  footer.className = 'edit-footer';
+  footer.appendChild(hint);
+
+  const submitBtn = document.createElement('button');
+  submitBtn.className = 'btn-submit-small';
+  submitBtn.textContent = 'Submit';
+  submitBtn.id = `submit-${s.id}`;
+  submitBtn.addEventListener('click', () => submitEdit(s.id));
+  footer.appendChild(submitBtn);
+
+  box.appendChild(footer);
+  return box;
+}
+
+function submitEdit(sentId) {
+  const s = sentences.find(s => s.id === sentId);
+  const area = document.getElementById(`ta-${sentId}`);
+  const hint = document.getElementById(`hint-${sentId}`);
+  const submitBtn = document.getElementById(`submit-${sentId}`);
+  const box = document.getElementById(`editbox-${sentId}`);
+
+  const originalText = s.text.trim();
+
+  if (area.innerText.trim() === originalText) {
+    hint.textContent = 'Please make a change before submitting.';
+    hint.classList.add('warn');
+    return;
+  }
+
+  studentEdits[sentId] = area.innerText.trim();
+  area.contentEditable = 'false';
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitted';
+  box.classList.add('submitted');
+  hint.textContent = 'Submitted.';
+  hint.classList.remove('warn');
+
+  p2submitted++;
+  document.getElementById('p2progress').textContent = `${p2submitted} / ${TOTAL} submitted`;
+
+  if (p2submitted === TOTAL) {
+    setTimeout(() => {
+      document.getElementById('p2done').style.display = 'block';
+      document.getElementById('p2btnRow').style.display = 'block';
+      document.getElementById('p2done').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 400);
+  }
+}
+
+// ============================================================
+// PHASE 3
+// ============================================================
+function showPhase3() {
+  sentences.filter(s => s.incomplete).forEach(s => { if (p3choices[s.id] === undefined) p3choices[s.id] = 0; });
+  document.getElementById('phase3').style.display = 'block';
+  document.getElementById('phase3').scrollIntoView({ behavior: 'smooth' });
+  buildPhase3();
+}
+
+function buildPhase3() {
+  buildOriginal();
+  buildStudent();
+  buildSuggestion();
+}
+
+function buildOriginal() {
+  const container = document.getElementById('p3Original');
+  container.innerHTML = '';
+  sentences.forEach(s => {
+    if (s.paragraphBreak) container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+    const span = document.createElement('span');
+    span.className = s.incomplete ? 'p3-original-runon' : 'p3-sent';
+    span.textContent = s.text + ' ';
+    container.appendChild(span);
+  });
+}
+
+function buildStudent() {
+  const container = document.getElementById('p3Student');
+  container.innerHTML = '';
+
+  let incompleteCount = 0;
+  sentences.forEach(s => {
+    if (s.paragraphBreak) container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+    const span = document.createElement('span');
+    if (s.incomplete) {
+      const altClass = incompleteCount % 2 === 1 ? ' alt' : '';
+      incompleteCount++;
+      span.className = 'p3-student' + altClass;
+      span.textContent = (studentEdits[s.id] || s.text) + ' ';
+    } else {
+      span.className = 'p3-sent';
+      span.textContent = s.text + ' ';
+    }
+    container.appendChild(span);
+  });
+}
+
+function buildSuggestion() {
+  const container = document.getElementById('p3Suggestion');
+  container.innerHTML = '';
+
+  const absorbed = new Set();
+  sentences.filter(s => s.incomplete).forEach(s => {
+    const chosenIdx = p3choices[s.id] ?? 0;
+    const strategy = s.fix.options[chosenIdx].strategy.toLowerCase();
+    const sIdx = sentences.findIndex(x => x.id === s.id);
+    if (strategy.includes('previous') && sIdx > 0) absorbed.add(sentences[sIdx - 1].id);
+    else if (strategy.includes('next') && sIdx < sentences.length - 1) absorbed.add(sentences[sIdx + 1].id);
+  });
+
+  sentences.forEach(s => {
+    if (absorbed.has(s.id)) return;
+    if (s.paragraphBreak) container.appendChild(Object.assign(document.createElement('span'), { className: 'para-break' }));
+
+    if (!s.incomplete) {
+      const span = document.createElement('span');
+      span.className = 'p3-sent';
+      span.textContent = s.text + ' ';
+      container.appendChild(span);
+      return;
+    }
+
+    const chosenIdx = p3choices[s.id] ?? 0;
+    const numOpts = s.fix.options.length;
+    const nextIdx = (chosenIdx + 1) % numOpts;
+    const chosenOpt = s.fix.options[chosenIdx];
+    const nextOpt = s.fix.options[nextIdx];
+
+    const span = document.createElement('span');
+    span.className = 'p3-suggestion';
+
+    const tooltip = document.createElement('span');
+    tooltip.className = 'p3-tooltip';
+    tooltip.innerHTML = `<div class="tt-label">Alternative: ${nextOpt.strategy}</div>${nextOpt.text}<div class="tt-switch">Click to switch to this version</div>`;
+
+    span.appendChild(document.createTextNode(chosenOpt.text + ' '));
+    span.appendChild(tooltip);
+    span.addEventListener('click', () => { p3choices[s.id] = nextIdx; buildSuggestion(); });
+    container.appendChild(span);
+  });
+}
+
+buildText();
+</script>
+</body>
+</html>
